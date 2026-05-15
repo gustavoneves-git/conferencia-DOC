@@ -12,8 +12,29 @@
     <a class="button primary" href="{{ url_for('reviews.final_confirmation', document_id=document.id, session_id=session.id) }}">Gerar versão final</a>
   </div>
 </section>
+<section class="panel meta-panel">
+  <h2>Execução da revisão</h2>
+  <div class="meta-grid">
+    <div><strong>Modo</strong><span>{{ session.ai_mode }}</span></div>
+    <div><strong>Modelo</strong><span>{{ session.model_used or '-' }}</span></div>
+    <div><strong>Status</strong><span>{{ session.status }}</span></div>
+    <div><strong>Fallback</strong><span>{{ 'sim' if 'FALLBACK' in session.status else 'não' }}</span></div>
+    <div><strong>Total RULE</strong><span>{{ metrics.rule_total }}</span></div>
+    <div><strong>Total AI</strong><span>{{ metrics.ai_total }}</span></div>
+  </div>
+  {% if 'FALLBACK' in session.status %}
+    <p class="warning-text">A IA falhou nesta execução. A revisão continuou apenas com regras fixas.</p>
+  {% endif %}
+</section>
 <section class="metrics compact">
   <div><span>{{ session.total_issues }}</span><small>Apontamentos</small></div>
+  <div><span>{{ metrics.located }}</span><small>Localizados no PDF</small></div>
+  <div><span>{{ metrics.not_located }}</span><small>Não localizados</small></div>
+  <div><span>{{ metrics.rule }}</span><small>Regra</small></div>
+  <div><span>{{ metrics.ai }}</span><small>IA</small></div>
+  <div><span>{{ metrics.both }}</span><small>Ambos</small></div>
+</section>
+<section class="metrics compact severity">
   <div><span>{{ session.total_low }}</span><small>Baixa</small></div>
   <div><span>{{ session.total_medium }}</span><small>Média</small></div>
   <div><span>{{ session.total_high }}</span><small>Alta</small></div>
@@ -24,7 +45,15 @@
   <h2>Arquivos disponíveis</h2>
   <div class="file-list">
     {% for file in files %}
-      <a class="button" href="{{ url_for('exports.download', file_id=file.id) }}">{{ file.file_type }}</a>
+      <a class="button" href="{{ url_for('exports.download', file_id=file.id) }}">
+        {% if file.file_type == 'PDF_GRIFADO' %}Baixar PDF grifado
+        {% elif file.file_type == 'RELATORIO_PDF' %}Baixar relatório
+        {% elif file.file_type == 'DOCX_CORRIGIDO' %}Baixar DOCX corrigido
+        {% elif file.file_type == 'PDF_CORRIGIDO' %}Baixar PDF corrigido
+        {% elif file.file_type == 'DOCX_FINAL' %}Baixar DOCX final
+        {% elif file.file_type == 'PDF_FINAL' %}Baixar PDF final
+        {% else %}{{ file.file_type }}{% endif %}
+      </a>
     {% else %}
       <p>Nenhum arquivo gerado.</p>
     {% endfor %}
@@ -36,11 +65,12 @@
     <input id="issueFilter" type="search" placeholder="Filtrar por gravidade, tipo ou trecho">
   </div>
   <table id="issuesTable">
-    <thead><tr><th>Código</th><th>Página</th><th>Tipo</th><th>Gravidade</th><th>Trecho</th><th>Explicação</th><th>Sugestão</th></tr></thead>
+    <thead><tr><th>Código</th><th>Página</th><th>Tipo</th><th>Gravidade</th><th>Fonte</th><th>PDF</th><th>Trecho</th><th>Explicação</th><th>Sugestão</th></tr></thead>
     <tbody>
       {% for issue in issues %}
       <tr>
         <td>{{ issue.code }}</td><td>{{ issue.page_number or '-' }}</td><td>{{ issue.issue_type }}</td><td>{{ issue.severity }}</td>
+        <td>{{ issue.source }}</td><td>{{ 'sim' if issue.located_in_pdf else 'não' }}</td>
         <td>{{ issue.original_text }}</td><td>{{ issue.explanation }}</td><td>{{ issue.suggestion }}</td>
       </tr>
       {% endfor %}

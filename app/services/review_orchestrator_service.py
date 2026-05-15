@@ -40,26 +40,35 @@ class ReviewOrchestratorService:
                 "arquivo": document["original_filename"],
             }
             ai_payload = AIReviewService().review(pages, metadata, rule_issues)
-            issues = IssueMergeService().merge(ai_payload)
+            issues = IssueMergeService().merge(ai_payload, rule_issues)
             issues = PdfLocatorService().mark_locations(issues, pages)
             totals = self._totals(issues)
+            fallback_used = bool(ai_payload.get("fallback_used"))
+            session_status = "COMPLETED_FALLBACK" if fallback_used else "COMPLETED"
+            model_used = current_app.config["OPENAI_MODEL"] or current_app.config["DEFAULT_OPENAI_MODEL"]
+            if fallback_used:
+                model_used = f"{model_used} | fallback RULE: {ai_payload.get('ai_error', '')[:120]}"
             session_id = reviews.create_session(
                 document_id,
-                "COMPLETED",
+                session_status,
                 totals,
                 current_app.config["AI_MODE"],
-                current_app.config["OPENAI_MODEL"],
+                model_used,
             )
-            reviews.save_issues(session_id, issues)
 
             refreshed = docs.get(document_id)
-            annotated = PdfAnnotationService(current_app.config["BASE_DIR"]).generate(document_id, document["original_path"], issues)
+            annotated = PdfAnnotationService(current_app.config["BASE_DIR"]).generate(
+                document_id, document["original_path"], issues, refreshed, totals
+            )
+            reviews.save_issues(session_id, issues)
             if annotated:
                 files.create(document_id, session_id, "PDF_GRIFADO", annotated)
             report = ReportPdfService(current_app.config["BASE_DIR"]).generate(document_id, refreshed, session_id, issues, totals)
             files.create(document_id, session_id, "RELATORIO_PDF", report)
             docs.update_status(document_id, "ANNOTATED_READY")
-            AuditLogService().log("document", document_id, "REVIEW_COMPLETED", "Revisao concluida.")
+            if fallback_used:
+                AuditLogService().log("document", document_id, "AI_FALLBACK", ai_payload.get("ai_error", "Falha na IA."))
+            AuditLogService().log("document", document_id, "REVIEW_COMPLETED", "Revisão concluída.")
             return session_id
         except Exception:
             docs.update_status(document_id, "ERROR")

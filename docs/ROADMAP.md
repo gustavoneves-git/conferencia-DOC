@@ -8,3 +8,17 @@
 - Autenticação interna e perfis.
 - Auditoria detalhada de ações humanas.
 - Exportação com padrões visuais da Consiste.
+
+## V2
+
+- Avaliação operacional local com PDFs reais ignorados pelo Git.
+- Prompt mais rigoroso e contextual para revisão de minutas existentes.
+- JSON guard mais tolerante a respostas imperfeitas da IA.
+- Consolidação de apontamentos por similaridade.
+- Localização visual melhorada no PDF.
+- Relatórios mais profissionais.
+- DOCX corrigido com formatação mais adequada para revisão.
+
+## TODO OCR
+
+Preparar futura etapa de OCR para PDFs escaneados ou com texto ruim. A V2 apenas documenta essa necessidade; não implementa OCR.

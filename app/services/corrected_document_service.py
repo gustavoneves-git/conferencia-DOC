@@ -44,8 +44,9 @@ class CorrectedDocumentService:
         docx = base / "storage" / "corrected" / output_name(document_id, "corrigido", "docx")
         pdf = base / "storage" / "corrected" / output_name(document_id, "corrigido", "pdf")
         writer = DocxOutputService()
-        writer.create_docx(str(docx), title, text)
-        writer.create_pdf(str(pdf), title, text)
+        company = data.get("empresa") or document["company_name"]
+        writer.create_docx(str(docx), title, text, company)
+        writer.create_pdf(str(pdf), title, text, company)
         files.create(document_id, session_id, "DOCX_CORRIGIDO", str(docx))
         files.create(document_id, session_id, "PDF_CORRIGIDO", str(pdf))
         docs.update_status(document_id, "CORRECTED_READY")

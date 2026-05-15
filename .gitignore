@@ -20,3 +20,11 @@ storage/tmp/*
 !storage/final/.gitkeep
 !storage/ai_raw/.gitkeep
 !storage/tmp/.gitkeep
+tests/documentos_referencia/entrada/*
+tests/documentos_referencia/esperado/*
+tests/documentos_referencia/saida/*
+tests/documentos_referencia/relatorios_avaliacao/*
+!tests/documentos_referencia/entrada/.gitkeep
+!tests/documentos_referencia/esperado/.gitkeep
+!tests/documentos_referencia/saida/.gitkeep
+!tests/documentos_referencia/relatorios_avaliacao/.gitkeep
