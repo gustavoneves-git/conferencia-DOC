@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Conferência Documento</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('dashboard.dashboard') }}">Conferência Documento</a>
+    <nav>
+      <a href="{{ url_for('documents.upload_form') }}">Revisar minuta</a>
+      <a href="{{ url_for('generation.form') }}">Gerar minuta</a>
+    </nav>
+  </header>
+  <main class="container">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="notice">{{ messages[0] }}</div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

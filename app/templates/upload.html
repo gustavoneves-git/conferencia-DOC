@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <h1>Revisar minuta existente</h1>
+    <p>Envie um PDF ou DOCX para extração, revisão e geração dos arquivos de apoio.</p>
+  </div>
+</section>
+<form class="form panel" method="post" enctype="multipart/form-data">
+  <label>Arquivo PDF/DOCX
+    <input type="file" name="file" accept=".pdf,.docx" required>
+  </label>
+  <label>Tipo documental opcional
+    <input type="text" name="document_type" placeholder="Ex.: ALTERACAO_CONTRATUAL_ENDERECO">
+  </label>
+  <button class="button primary" type="submit">Analisar documento</button>
+</form>
+{% endblock %}

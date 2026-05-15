@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="panel confirm">
+  <h1>Confirmação humana obrigatória</h1>
+  <p>Confirme que a revisão humana foi realizada antes de gerar a versão final.</p>
+  <form method="post" action="{{ url_for('exports.generate_final', document_id=document_id, session_id=session_id) }}">
+    <label class="check"><input type="checkbox" name="human_confirmed" required> Revisão humana realizada e aprovada.</label>
+    <button class="button primary" type="submit">Gerar documento final para protocolo</button>
+  </form>
+</section>
+{% endblock %}

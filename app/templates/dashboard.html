@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <h1>Dashboard</h1>
+    <p>Revisão operacional avançada de minutas societárias.</p>
+  </div>
+  <a class="button primary" href="{{ url_for('documents.upload_form') }}">Analisar documento</a>
+</section>
+<section class="metrics">
+  <div><span>{{ counts.total }}</span><small>Total</small></div>
+  <div><span>{{ counts.reviewing }}</span><small>Em revisão</small></div>
+  <div><span>{{ counts.corrected }}</span><small>Corrigidos</small></div>
+  <div><span>{{ counts.final }}</span><small>Finalizados</small></div>
+</section>
+<section class="panel">
+  <h2>Últimos documentos</h2>
+  <table>
+    <thead><tr><th>Arquivo</th><th>Tipo</th><th>Status</th><th>Criado em</th></tr></thead>
+    <tbody>
+      {% for doc in documents %}
+      <tr><td>{{ doc.original_filename }}</td><td>{{ doc.document_type or '-' }}</td><td>{{ doc.status }}</td><td>{{ doc.created_at }}</td></tr>
+      {% else %}
+      <tr><td colspan="4">Nenhum documento analisado ainda.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

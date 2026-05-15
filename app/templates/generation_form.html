@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <h1>Gerar minuta do zero</h1>
+    <p>Estrutura inicial do Modo B para evolução da V1.</p>
+  </div>
+</section>
+<form class="form panel">
+  <label>Tipo de ato <input type="text" placeholder="Ex.: CONTRATO_SOCIAL_CONSTITUICAO_LTDA"></label>
+  <label>Empresa <input type="text"></label>
+  <label>Sócios/administradores <textarea rows="5"></textarea></label>
+  <label>Objeto e cláusulas especiais <textarea rows="6"></textarea></label>
+  <button class="button" type="button" disabled>Geração completa prevista para próxima etapa</button>
+</form>
+{% endblock %}
