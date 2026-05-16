@@ -47,3 +47,18 @@ O modo `--compare` roda os PDFs locais em mock e API e gera `comparativo_*.json`
 - `trechos_localizados_pdf`: indica quantos apontamentos conseguiram marcação visual.
 - `trechos_nao_localizados_pdf`: deve ser revisado para melhorar prompt, extração ou localização.
 - `erros_processamento`: registra falhas sem interromper a avaliação dos demais documentos.
+## V2.5 - Avaliação por Base
+
+O fluxo de revisão combina regras fixas, IA por API e pós-processamento defensivo. As regras continuam como reforço operacional; a IA é usada como camada principal quando `AI_MODE=api`.
+
+Na V2.5, `scripts/avaliar_revisao.py` aceita `--base base_01`. Nesse modo, os documentos são lidos de `tests/documentos_referencia/base_01/entrada/<categoria>` e as saídas são gravadas em `saida`, `relatorios_avaliacao` e `checklist_humano` dentro da própria base.
+
+Cada avaliação gera:
+
+- apontamentos consolidados;
+- estratégia de localização visual;
+- origem `RULE`, `AI` ou `BOTH`;
+- `risk_score` e `risk_level`;
+- checklist humano para revisão operacional.
+
+O modo `--api-summary` consolida os JSONs API já existentes. Ele não chama a API novamente.

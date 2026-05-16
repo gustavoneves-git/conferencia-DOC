@@ -28,3 +28,15 @@ Este arquivo orienta a calibração dos documentos de referência da V2.1. Ele n
 - O documento AGE/estatuto não deve retornar zero apontamentos.
 - Detectar `Saida`, `livra e espontânea vontade`, `Cargo de Diretor e Acionista a Sr.ª`, `Ao Diretor Presidente compete os poderes`, `cláusula adjudicia e a extra`, `contas-corrente`, repetição de `ordenar títulos de créditos para protesto` e `é consolidado o estatuto social anexo a presente ata`.
 - Em alteração de endereço, não marcar como erro a coexistência de endereço anterior e novo quando isso for esperado pelo ato.
+## Base de Referência 01
+
+A Base 01 amplia a maturação para documentos reais variados. Ela deve ser usada para medir:
+
+- falsos positivos em `documentos_bons`;
+- falsos negativos apontados por checklist humano;
+- tipos de erro recorrentes;
+- trechos não localizados no PDF;
+- comportamento por categoria documental;
+- distribuição de risco operacional.
+
+Os relatórios locais da Base 01 ficam em `tests/documentos_referencia/base_01/relatorios_avaliacao` e são ignorados pelo Git.

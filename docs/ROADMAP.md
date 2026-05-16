@@ -19,6 +19,15 @@
 - Relatórios mais profissionais.
 - DOCX corrigido com formatação mais adequada para revisão.
 
+## V2.5
+
+- Base de Referência 01 organizada por categoria documental.
+- Manifesto local de documentos reais sem envio ao Git.
+- Avaliação por base com `--base base_01`.
+- Resumo consolidado com origem, gravidade, tipo, localização e recorrência.
+- Checklist humano por documento para medir falso positivo/falso negativo.
+- Classificação de risco operacional por documento.
+
 ## TODO OCR
 
 Preparar futura etapa de OCR para PDFs escaneados ou com texto ruim. A V2 apenas documenta essa necessidade; não implementa OCR.

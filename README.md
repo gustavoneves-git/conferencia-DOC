@@ -80,6 +80,27 @@ python scripts/avaliar_revisao.py --compare
 
 Use `--compare` somente depois de configurar a chave, pois esse modo envia o texto extraído dos PDFs locais para a API.
 
+## Base de Referência 01
+
+A V2.5 adiciona uma base local maior para maturação da revisão:
+
+```text
+tests/documentos_referencia/base_01/entrada/<categoria>
+```
+
+Categorias disponíveis: `constituicao_ltda`, `alteracao_endereco`, `alteracao_socios`, `alteracao_capital`, `alteracao_objeto`, `consolidacao_contratual`, `ata_age`, `ata_ago`, `estatuto_social` e `documentos_bons`.
+
+Comandos:
+
+```powershell
+python scripts/criar_manifesto_base.py --base base_01
+python scripts/avaliar_revisao.py --base base_01 --mode mock
+python scripts/avaliar_revisao.py --base base_01 --mode api
+python scripts/avaliar_revisao.py --base base_01 --api-summary
+```
+
+A avaliação gera JSON com `risk_score` e `risk_level`, checklist humano por documento e resumo consolidado da base. Documentos reais, saídas, manifestos, JSONs e checklists preenchidos ficam ignorados pelo Git.
+
 ## Observação
 
 O sistema não substitui advogado e não toma decisão jurídica definitiva. Ele é assistente operacional avançado para conferência, produção e padronização documental.
