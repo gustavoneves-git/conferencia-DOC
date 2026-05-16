@@ -13,12 +13,15 @@ class IssueMergeService:
 
         for idx, issue in enumerate(rule_issues or [], start=1):
             normalized = normalize_issue({**issue, "source": "RULE"}, idx)
+            if not normalized:
+                continue
             self._add_or_merge(merged, normalized)
 
         for issue in ai_payload.get("normalized_issues", []):
             issue = {**issue, "source": "AI"}
             self._add_or_merge(merged, issue)
 
+        merged = self._dedupe_final(merged)
         self._sort_issues(merged)
         for idx, issue in enumerate(merged, start=1):
             issue["code"] = f"E{idx:03d}"
@@ -33,16 +36,12 @@ class IssueMergeService:
 
     def _find_match(self, merged: list[dict], incoming: dict) -> int | None:
         for idx, existing in enumerate(merged):
-            page_compatible = (
-                existing.get("page_number") == incoming.get("page_number")
-                or not existing.get("page_number")
-                or not incoming.get("page_number")
-            )
-            if not page_compatible:
-                continue
             same_type = existing.get("issue_type") == incoming.get("issue_type")
             similarity = self._similarity(existing.get("original_text", ""), incoming.get("original_text", ""))
-            if similarity >= 0.86 or (same_type and similarity >= 0.74):
+            overlap = self._overlap(existing.get("original_text", ""), incoming.get("original_text", ""))
+            if not self._page_compatible(existing.get("page_number"), incoming.get("page_number"), similarity, overlap):
+                continue
+            if similarity >= 0.86 or overlap >= 0.72 or (same_type and (similarity >= 0.70 or overlap >= 0.55)):
                 return idx
         return None
 
@@ -88,6 +87,32 @@ class IssueMergeService:
         if left_key in right_key or right_key in left_key:
             return 1
         return SequenceMatcher(None, left_key, right_key).ratio()
+
+    def _overlap(self, left: str, right: str) -> float:
+        left_words = set(self._match_key(left).split())
+        right_words = set(self._match_key(right).split())
+        if not left_words or not right_words:
+            return 0
+        return len(left_words & right_words) / min(len(left_words), len(right_words))
+
+    def _page_compatible(self, left_page, right_page, similarity: float, overlap: float) -> bool:
+        if not left_page or not right_page or left_page == right_page:
+            return True
+        try:
+            distance = abs(int(left_page) - int(right_page))
+        except (TypeError, ValueError):
+            return False
+        return distance == 1 and (similarity >= 0.86 or overlap >= 0.72)
+
+    def _dedupe_final(self, issues: list[dict]) -> list[dict]:
+        result: list[dict] = []
+        for issue in issues:
+            match_index = self._find_match(result, issue)
+            if match_index is None:
+                result.append(issue)
+            else:
+                result[match_index] = self._consolidate(result[match_index], issue)
+        return result
 
     def _match_key(self, text: str) -> str:
         text = "".join(

@@ -15,6 +15,10 @@ Critério central: marque apenas o que for realmente útil para melhorar o docum
 Faça revisão contextual profunda:
 - compare preâmbulo, qualificação, cláusulas, poderes de administração, foro, fecho e assinaturas;
 - verifique se o gênero usado nas cláusulas é compatível com a qualificação e com a assinatura;
+- antes de apontar erro de gênero em “sócio administrador” ou “sócia administradora”, verifique quem foi nomeado na cláusula de administração;
+- se a administradora nomeada for mulher, “A sócia administradora” está correto;
+- se o administrador nomeado for homem, “O sócio administrador” está correto;
+- se houver dúvida sobre quem administra, use DADO_A_CONFERIR e não sugira troca automática de gênero;
 - identifique resquícios de modelos reaproveitados, como sócia/sócio, administrador/administradora, falecido/falecida, sede/endereço antigo, diretoria/administrador ou sociedade limitada/S.A. usados de forma incompatível;
 - detecte erros sutis de vírgula entre sujeito e verbo, concordância nominal/verbal, plural, crase e regência;
 - avalie se títulos e subtítulos estão coerentes com o conteúdo real da cláusula;
@@ -24,6 +28,10 @@ Faça revisão contextual profunda:
 Para cada apontamento, o trecho_original deve ser exatamente copiável do texto fornecido. Não reescreva, não normalize acentos, não corrija a grafia dentro de trecho_original e não amplie demais o trecho. Prefira o menor trecho suficiente para localizar o problema no PDF.
 
 Se o problema for uma inconsistência que depende de dois trechos distantes, use em trecho_original o trecho mais diretamente problemático e explique a relação na justificativa_tecnica.
+
+Não corrija termos jurídicos tradicionais sem segurança. A expressão “peita ou suborno” pode aparecer em cláusula de desimpedimento como termo jurídico tradicional. Não sugira palavras aleatórias, especialmente “petista”. Se houver dúvida sobre termo jurídico antigo, classifique como DADO_A_CONFERIR e peça validação humana.
+
+Evite duplicar apontamentos. Se um trecho curto já está contido em um trecho maior com o mesmo problema, retorne apenas um apontamento. Priorize o trecho mais localizável, claro e útil para o PDF grifado.
 
 Classifique cada apontamento em: ORTOGRAFIA, ACENTUACAO, CONCORDANCIA, PONTUACAO, FORMATACAO, PADRONIZACAO, REDACAO_FRACA, COERENCIA_INTERNA, QUALIFICACAO_SOCIO, QUALIFICACAO_ADMINISTRADOR, ERRO_GENERO, ERRO_NUMERACAO, ERRO_REFERENCIA_LEGAL, CLAUSULA_JURIDICA_SENSIVEL, INCONSISTENCIA_DOCUMENTAL, DADO_A_CONFERIR, ASSINATURA_E_FECHAMENTO, ESTRUTURA_DOCUMENTAL, OUTRO.
 

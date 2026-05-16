@@ -54,3 +54,39 @@ def test_pesa_clause_has_sensitive_professional_suggestion():
     assert issue["issue_type"] == "CLAUSULA_JURIDICA_SENSIVEL"
     assert issue["severity"] == "CONFERIR"
     assert "incidem sobre as quotas" in issue["suggestion"]
+
+
+def test_quoren_female_administrator_declaration_is_not_gender_error():
+    text = """
+    CLÁUSULA SEXTA – DA ADMINISTRAÇÃO DA SOCIEDADE
+    A administração da sociedade caberá a Sr.ª CLAUDIA CHRISTINA DE SOUZA.
+    CLÁUSULA NONA – DO DESIMPEDIMENTO
+    A sócia administradora declara sob as penas da lei.
+    """
+    issues = RuleReviewService().review([{"page_number": 1, "text": text}])
+    assert not any(issue["original_text"] == "A sócia administradora declara" for issue in issues)
+
+
+def test_goga_male_administrator_declaration_is_gender_error():
+    text = """
+    CLÁUSULA SEXTA – DA ADMINISTRAÇÃO DA SOCIEDADE
+    A administração da sociedade caberá ao Sr. RENATO OSVALDO AMARAL DE SOUZA.
+    CLÁUSULA NONA – DO DESIMPEDIMENTO
+    A sócia administradora declara sob as penas da lei.
+    """
+    issues = RuleReviewService().review([{"page_number": 1, "text": text}])
+    issue = next(issue for issue in issues if issue["original_text"] == "A sócia administradora declara")
+    assert issue["severity"] == "ALTA"
+    assert issue["suggestion"] == "O sócio administrador declara"
+
+
+def test_peita_ou_suborno_is_not_rule_error():
+    text = "não está condenado por crime de prevaricação, peita ou suborno, concussão ou peculato."
+    issues = RuleReviewService().review([{"page_number": 1, "text": text}])
+    assert not issues
+
+
+def test_female_resident_domiciliado_is_still_detected():
+    text = "CLAUDIA CHRISTINA DE SOUZA, brasileira, casada, empresária, residente e domiciliado em Jandira."
+    issues = RuleReviewService().review([{"page_number": 1, "text": text}])
+    assert any(issue["original_text"] == "domiciliado" and issue["suggestion"] == "domiciliada" for issue in issues)

@@ -38,3 +38,19 @@ def test_validate_dedupes_similar_issues():
     )
     assert len(payload["normalized_issues"]) == 1
     assert payload["normalized_issues"][0]["severity"] == "ALTA"
+
+
+def test_blocks_absurd_petista_suggestion_in_legal_context():
+    payload = validate_review_payload(
+        {
+            "apontamentos": [
+                {
+                    "trecho_original": "crime falimentar, de prevaricação, peita ou suborno, concussão",
+                    "tipo": "ORTOGRAFIA",
+                    "gravidade": "ALTA",
+                    "sugestao": "trocar peita por petista",
+                }
+            ]
+        }
+    )
+    assert payload["normalized_issues"] == []

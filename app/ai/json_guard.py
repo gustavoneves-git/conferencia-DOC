@@ -78,10 +78,14 @@ def _norm_enum(value: str, allowed: set[str], fallback: str) -> str:
     return normalized if normalized in allowed else fallback
 
 
-def normalize_issue(issue: dict, index: int) -> dict:
+def normalize_issue(issue: dict, index: int) -> dict | None:
     issue = issue or {}
     severity = _norm_enum(issue.get("gravidade") or issue.get("severity"), SEVERITIES, "MEDIA")
     issue_type = _norm_enum(issue.get("tipo") or issue.get("issue_type"), ISSUE_TYPES, "OUTRO")
+    original_text = str(issue.get("trecho_original") or issue.get("original_text") or "").strip()
+    suggestion = str(issue.get("sugestao") or issue.get("suggestion") or "").strip()
+    if _is_blocked_hallucination(original_text, suggestion):
+        return None
     if issue_type == "DADO_A_CONFERIR":
         severity = "CONFERIR"
     page_number = issue.get("pagina_estimada") or issue.get("page_number")
@@ -92,12 +96,12 @@ def normalize_issue(issue: dict, index: int) -> dict:
     return {
         "code": f"E{index:03d}",
         "page_number": page_number,
-        "original_text": str(issue.get("trecho_original") or issue.get("original_text") or "").strip(),
+        "original_text": original_text,
         "issue_type": issue_type,
         "severity": severity,
         "explanation": str(issue.get("explicacao") or issue.get("explanation") or "Apontamento identificado para revisão.").strip(),
         "technical_reason": str(issue.get("justificativa_tecnica") or issue.get("technical_reason") or "Revisão técnica recomendada.").strip(),
-        "suggestion": str(issue.get("sugestao") or issue.get("suggestion") or "").strip(),
+        "suggestion": suggestion,
         "recommended_action": str(issue.get("acao_recomendada") or issue.get("recommended_action") or "Revisar o apontamento antes de aplicar qualquer alteração.").strip(),
         "can_be_highlighted": _as_bool(issue.get("pode_ser_grifado", issue.get("can_be_highlighted", True))),
         "located_in_pdf": bool(issue.get("located_in_pdf", False)),
@@ -111,7 +115,7 @@ def validate_review_payload(payload: dict) -> dict:
     apontamentos = payload.get("apontamentos") or []
     if not isinstance(apontamentos, list):
         apontamentos = []
-    normalized = [normalize_issue(item, idx) for idx, item in enumerate(apontamentos, start=1)]
+    normalized = [item for item in (normalize_issue(item, idx) for idx, item in enumerate(apontamentos, start=1)) if item]
     normalized = _dedupe_issues(normalized)
     for idx, issue in enumerate(normalized, start=1):
         issue["code"] = f"E{idx:03d}"
@@ -189,3 +193,14 @@ def _as_bool(value) -> bool:
 def _norm_source(value: str) -> str:
     source = str(value or "AI").upper().strip()
     return source if source in {"RULE", "AI", "BOTH"} else "AI"
+
+
+def _is_blocked_hallucination(original_text: str, suggestion: str) -> bool:
+    original = _match_key(original_text)
+    suggestion_key = _match_key(suggestion)
+    if "peita ou suborno" in original and "petista" in suggestion_key:
+        return True
+    blocked_suggestions = {"petista"}
+    return any(word in suggestion_key.split() for word in blocked_suggestions) and any(
+        term in original for term in {"crime falimentar", "prevaricacao", "peita", "suborno", "concussao", "peculato"}
+    )

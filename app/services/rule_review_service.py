@@ -4,6 +4,8 @@ import re
 class RuleReviewService:
     def review(self, pages: list[dict]) -> list[dict]:
         issues = []
+        full_text = "\n".join(page["text"] for page in pages)
+        admin_gender = self._administration_gender(full_text)
         for page in pages:
             text = page["text"]
             page_no = page["page_number"]
@@ -11,6 +13,7 @@ class RuleReviewService:
                 for match in re.finditer(rule["pattern"], text, flags=rule.get("flags", re.IGNORECASE)):
                     issues.append(self._issue(page_no, match.group(0), rule))
             issues.extend(self._contextual_gender_issues(page_no, text))
+            issues.extend(self._administration_gender_issues(page_no, text, admin_gender))
         return issues
 
     def _issue(self, page_no, original, rule):
@@ -73,7 +76,6 @@ class RuleReviewService:
             base("Balanço Extraordinário", "FORMATACAO", "BAIXA", "Maiúsculas podem ser desnecessárias em texto corrido.", "balanço extraordinário", flags=0),
             base("DIASSIS", "DADO_A_CONFERIR", "CONFERIR", "Nome próprio suspeito deve ser conferido, não corrigido automaticamente.", "conferir grafia do nome"),
             base("sócia falecida", "ERRO_GENERO", "CONFERIR", "Pode indicar gênero inadequado dependendo da pessoa mencionada.", "conferir gênero e qualidade da parte"),
-            base("A sócia administradora declara", "ERRO_GENERO", "ALTA", "Pode haver incompatibilidade com administrador masculino.", "O sócio administrador declara"),
             base("Saida", "ACENTUACAO", "MEDIA", "Falta acento em saída.", "Saída", flags=0),
             base("livra e espontânea vontade", "ORTOGRAFIA", "ALTA", "Há troca de gênero em expressão consagrada.", "livre e espontânea vontade"),
             regex_rule(r"Cargo\s+de\s+Diretor\s+e\s+Acionista\s+a\s+Sr\.ª", "REDACAO_FRACA", "ALTA", "A redação está truncada e prejudica a compreensão da saída da diretora/acionista.", "A Sr.ª ... manifesta sua saída do cargo de Diretora e sua retirada como acionista"),
@@ -83,6 +85,59 @@ class RuleReviewService:
             base("contas-corrente", "PADRONIZACAO", "CONFERIR", "Verificar pluralização do termo conforme o contexto.", "contas-correntes"),
             regex_rule(r"é\s+consolidado\s+o\s+estatuto\s+social\s+anexo\s+a\s+presente\s+ata", "REDACAO_FRACA", "MEDIA", "Redação pouco natural e com ausência de crase.", "fica consolidado o estatuto social anexo à presente ata"),
         ]
+
+    def _administration_gender(self, text: str) -> str | None:
+        window_match = re.search(
+            r"CLÁUSULA\s+SEXTA\s+[–-]\s+DA\s+ADMINISTRAÇÃO\s+DA\s+SOCIEDADE(?P<body>.*?)(?:CLÁUSULA\s+S[ÉE]TIMA|$)",
+            text or "",
+            flags=re.IGNORECASE | re.DOTALL,
+        )
+        body = window_match.group("body") if window_match else text or ""
+        if re.search(r"\bcaberá\s+ao\s+Sr\.?\b|\bcaberá\s+ao\s+sócio\b", body, flags=re.IGNORECASE):
+            return "M"
+        if re.search(r"\bcaberá\s+(?:a|à)\s+Sr\.ª\b|\bcaberá\s+(?:a|à)\s+sócia\b", body, flags=re.IGNORECASE):
+            return "F"
+        if re.search(r"\bsócio\s+administrador\b", body, flags=re.IGNORECASE):
+            return "M"
+        if re.search(r"\bsócia\s+administradora\b", body, flags=re.IGNORECASE):
+            return "F"
+        return None
+
+    def _administration_gender_issues(self, page_no: int, text: str, admin_gender: str | None) -> list[dict]:
+        issues = []
+        if not admin_gender:
+            return issues
+        if admin_gender == "M" and re.search(r"\bA\s+sócia\s+administradora\s+declara\b", text or "", flags=re.IGNORECASE):
+            issues.append(
+                {
+                    "page_number": page_no,
+                    "original_text": "A sócia administradora declara",
+                    "issue_type": "ERRO_GENERO",
+                    "severity": "ALTA",
+                    "explanation": "A cláusula de administração indica administrador masculino, mas o desimpedimento usa forma feminina.",
+                    "technical_reason": "A concordância deve acompanhar o administrador nomeado na cláusula de administração.",
+                    "suggestion": "O sócio administrador declara",
+                    "recommended_action": "Corrigir o gênero após confirmar que a administração foi atribuída a homem.",
+                    "can_be_highlighted": True,
+                    "source": "RULE",
+                }
+            )
+        if admin_gender == "F" and re.search(r"\bO\s+sócio\s+administrador\s+declara\b", text or "", flags=re.IGNORECASE):
+            issues.append(
+                {
+                    "page_number": page_no,
+                    "original_text": "O sócio administrador declara",
+                    "issue_type": "ERRO_GENERO",
+                    "severity": "ALTA",
+                    "explanation": "A cláusula de administração indica administradora feminina, mas o desimpedimento usa forma masculina.",
+                    "technical_reason": "A concordância deve acompanhar a administradora nomeada na cláusula de administração.",
+                    "suggestion": "A sócia administradora declara",
+                    "recommended_action": "Corrigir o gênero após confirmar que a administração foi atribuída a mulher.",
+                    "can_be_highlighted": True,
+                    "source": "RULE",
+                }
+            )
+        return issues
 
     def _contextual_gender_issues(self, page_no: int, text: str) -> list[dict]:
         issues = []
