@@ -29,6 +29,11 @@ REPORT_DIR = REFERENCE_ROOT / "relatorios_avaliacao"
 
 def main() -> int:
     args = parse_args()
+    if args.api_summary:
+        REPORT_DIR.mkdir(parents=True, exist_ok=True)
+        path = write_api_summary()
+        print(f"Resumo API gerado em {path}")
+        return 0
     if args.mode:
         os.environ["AI_MODE"] = args.mode
     app = create_app()
@@ -65,6 +70,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Avalia a revisão de PDFs de referência.")
     parser.add_argument("--mode", choices=["mock", "api"], help="Modo de IA a usar nesta execução.")
     parser.add_argument("--compare", action="store_true", help="Roda mock e api e gera relatório comparativo.")
+    parser.add_argument("--api-summary", action="store_true", help="Gera resumo consolidado a partir dos JSONs API existentes.")
     return parser.parse_args()
 
 
@@ -140,6 +146,9 @@ def evaluate_pdf(pdf_path: Path, mode: str | None = None) -> dict:
                 "gravidade": issue.get("severity"),
                 "fonte": issue.get("source"),
                 "localizado_pdf": bool(issue.get("located_in_pdf")),
+                "estrategia_localizacao": issue.get("location_strategy"),
+                "repeated_group_id": issue.get("repeated_group_id"),
+                "repeated_count": issue.get("repeated_count"),
                 "trecho": issue.get("original_text"),
                 "sugestao": issue.get("suggestion"),
             }
@@ -210,6 +219,39 @@ def empty_result(filename: str) -> dict:
         "trechos_nao_localizados_pdf": 0,
         "erros_processamento": [],
     }
+
+
+def write_api_summary() -> Path:
+    reports = sorted(REPORT_DIR.glob("*_avaliacao_api.json"))
+    documents = []
+    for report in reports:
+        try:
+            data = json.loads(report.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            continue
+        documents.append(
+            {
+                "documento": data.get("arquivo"),
+                "total_apontamentos": data.get("total_apontamentos", 0),
+                "origem": data.get("apontamentos_por_origem", {}),
+                "localizados": data.get("trechos_localizados_pdf", 0),
+                "nao_localizados": data.get("trechos_nao_localizados_pdf", 0),
+                "principais_tipos": _top_items(data.get("apontamentos_por_tipo", {})),
+                "principais_gravidades": _top_items(data.get("apontamentos_por_gravidade", {})),
+            }
+        )
+    summary = {
+        "gerado_em": datetime.now().isoformat(timespec="seconds"),
+        "total_documentos": len(documents),
+        "documentos": documents,
+    }
+    target = REPORT_DIR / f"resumo_api_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    target.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+    return target
+
+
+def _top_items(counter: dict) -> dict:
+    return dict(sorted((counter or {}).items(), key=lambda item: item[1], reverse=True)[:5])
 
 
 if __name__ == "__main__":

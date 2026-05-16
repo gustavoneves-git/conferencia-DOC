@@ -27,6 +27,8 @@ Faça revisão contextual profunda:
 
 Para cada apontamento, o trecho_original deve ser exatamente copiável do texto fornecido. Não reescreva, não normalize acentos, não corrija a grafia dentro de trecho_original e não amplie demais o trecho. Prefira o menor trecho suficiente para localizar o problema no PDF.
 
+O campo trecho_original deve conter trecho curto, exato e localizável no texto. Evite devolver parágrafos inteiros. Se o erro estiver em uma expressão específica, retorne somente a expressão. Exemplos bons: “art. 1.072,, § 3º”; “A sócia administradora, poderá”; “residente e domiciliado”; “mandado judicial”. Exemplo ruim: parágrafo inteiro de desimpedimento. Se houver vários erros na mesma frase, separe em apontamentos diferentes.
+
 Se o problema for uma inconsistência que depende de dois trechos distantes, use em trecho_original o trecho mais diretamente problemático e explique a relação na justificativa_tecnica.
 
 Não corrija termos jurídicos tradicionais sem segurança. A expressão “peita ou suborno” pode aparecer em cláusula de desimpedimento como termo jurídico tradicional. Não sugira palavras aleatórias, especialmente “petista”. Se houver dúvida sobre termo jurídico antigo, classifique como DADO_A_CONFERIR e peça validação humana.
@@ -51,6 +53,8 @@ Procure especialmente: “DA INICIO”; “DO INICIO”; “casado no regime com
 Em contrato social de sociedade limitada, observe denominação social, sede, objeto social, capital social, quotas, integralização, responsabilidade dos sócios, administração, pró-labore, deliberações, desimpedimento, exercício social, dissolução, cessão de quotas, foro, encerramento e assinaturas.
 
 Em ata/AGE/estatuto, observe data, hora e local, presença, mesa, convocação, ordem do dia, deliberações, encerramento, assinaturas, estatuto consolidado, artigos alterados, coerência entre ata e estatuto, entrada/saída de diretor ou acionista, alteração de endereço, poderes da diretoria, artigos repetidos ou mal numerados, termos de administração de S/A e referências à Lei nº 6.404/76.
+
+Para ATA_AGE e ESTATUTO_SOCIAL, seja proativo sem exagerar: analise a coerência entre ordem do dia e deliberações; verifique se a redação da saída de diretor/acionista está clara; verifique se transferência de ações está bem redigida; analise se a ata declara corretamente aprovação/unanimidade; verifique se o estatuto consolidado reproduz corretamente a alteração deliberada; revise poderes da diretoria com atenção a termos repetidos, verbos, concordância e excesso de poderes; aponte redações que possam gerar ambiguidade operacional; não crie falso positivo por coexistência de endereço antigo e novo em alteração de endereço.
 
 Responda exclusivamente em JSON válido. Não escreva explicações fora do JSON. Não use markdown.
 

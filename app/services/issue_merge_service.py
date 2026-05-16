@@ -22,6 +22,7 @@ class IssueMergeService:
             self._add_or_merge(merged, issue)
 
         merged = self._dedupe_final(merged)
+        self._mark_repeated_occurrences(merged)
         self._sort_issues(merged)
         for idx, issue in enumerate(merged, start=1):
             issue["code"] = f"E{idx:03d}"
@@ -39,6 +40,8 @@ class IssueMergeService:
             same_type = existing.get("issue_type") == incoming.get("issue_type")
             similarity = self._similarity(existing.get("original_text", ""), incoming.get("original_text", ""))
             overlap = self._overlap(existing.get("original_text", ""), incoming.get("original_text", ""))
+            if self._must_keep_separate(existing, incoming):
+                continue
             if not self._page_compatible(existing.get("page_number"), incoming.get("page_number"), similarity, overlap):
                 continue
             if similarity >= 0.86 or overlap >= 0.72 or (same_type and (similarity >= 0.70 or overlap >= 0.55)):
@@ -58,6 +61,25 @@ class IssueMergeService:
         if not result.get("technical_reason") and secondary.get("technical_reason"):
             result["technical_reason"] = secondary["technical_reason"]
         return result
+
+    def _must_keep_separate(self, existing: dict, incoming: dict) -> bool:
+        left = self._match_key(existing.get("original_text", ""))
+        right = self._match_key(incoming.get("original_text", ""))
+        protected = {
+            "mandado judicial",
+            "art 1 072 § 3º",
+            "casado no regime comunhao parcial de bens",
+            "casada no regime comunhao parcial de bens",
+        }
+        left_protected = left in protected
+        right_protected = right in protected
+        if left_protected and right_protected and left != right:
+            return True
+        if left_protected != right_protected:
+            shorter, longer = (left, right) if left_protected else (right, left)
+            if shorter in longer and len(longer.split()) > len(shorter.split()) + 4:
+                return True
+        return False
 
     def _better_explained(self, existing: dict, incoming: dict) -> dict:
         existing_score = self._quality_score(existing)
@@ -124,3 +146,35 @@ class IssueMergeService:
 
     def _sort_issues(self, issues: list[dict]) -> None:
         issues.sort(key=lambda item: (item.get("page_number") or 99999, -self.severity_order.get(item.get("severity"), 0), item.get("original_text", "")))
+
+    def _mark_repeated_occurrences(self, issues: list[dict]) -> None:
+        groups: dict[str, list[dict]] = {}
+        for issue in issues:
+            key = self._repeat_key(issue)
+            if key:
+                groups.setdefault(key, []).append(issue)
+        group_index = 1
+        for items in groups.values():
+            pages = {item.get("page_number") for item in items}
+            if len(items) < 2 or len(pages) < 2:
+                continue
+            group_id = f"R{group_index:03d}"
+            group_index += 1
+            for item in items:
+                item["repeated_group_id"] = group_id
+                item["repeated_count"] = len(items)
+
+    def _repeat_key(self, issue: dict) -> str:
+        text = self._match_key(issue.get("original_text", ""))
+        if not text:
+            return ""
+        known = {
+            "clausula adjudicia e a extra",
+            "contas corrente",
+            "ordenar titulos de creditos para protesto",
+        }
+        if text in known:
+            return text
+        if len(text.split()) <= 8:
+            return f"{issue.get('issue_type')}|{text}"
+        return ""

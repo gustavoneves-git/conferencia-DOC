@@ -39,7 +39,11 @@ class ReportPdfService:
             c.rect(40, y - 4, width - 80, 18, fill=1, stroke=0)
             c.setFillColor(colors.HexColor("#1f2933"))
             c.setFont("Helvetica-Bold", 9)
-            c.drawString(48, y, f"{issue['code']} | Página {issue.get('page_number') or '-'} | {issue['issue_type']} | {issue['severity']} | Fonte {issue.get('source', '-')}")
+            c.drawString(
+                48,
+                y,
+                f"{issue['code']} | Página {issue.get('page_number') or '-'} | {issue['issue_type']} | {issue['severity']} | Fonte: {self._source_label(issue.get('source'))}",
+            )
             y -= 18
             c.setFont("Helvetica", 9)
             rows = [
@@ -49,6 +53,11 @@ class ReportPdfService:
                 f"Justificativa técnica: {issue.get('technical_reason') or '-'}",
                 f"Ação recomendada: {issue.get('recommended_action') or '-'}",
             ]
+            if issue.get("repeated_group_id"):
+                rows.extend([
+                    "Ocorrência repetida: sim",
+                    f"Grupo: {issue.get('repeated_group_id')} ({issue.get('repeated_count') or 0} ocorrências)",
+                ])
             for row in rows:
                 y = self._draw_wrapped(c, y, row, height, "Helvetica", 9)
             y -= 8
@@ -76,4 +85,22 @@ class ReportPdfService:
         return y
 
     def _wrap(self, text, size):
-        return [text[i:i + size] for i in range(0, len(text), size)] or [""]
+        words = str(text or "").split()
+        if not words:
+            return [""]
+        lines = []
+        current = ""
+        for word in words:
+            candidate = f"{current} {word}".strip()
+            if len(candidate) <= size:
+                current = candidate
+                continue
+            if current:
+                lines.append(current)
+            current = word
+        if current:
+            lines.append(current)
+        return lines
+
+    def _source_label(self, source):
+        return {"BOTH": "Regra + IA", "RULE": "Regra", "AI": "IA"}.get(source or "", source or "-")

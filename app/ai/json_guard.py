@@ -84,8 +84,13 @@ def normalize_issue(issue: dict, index: int) -> dict | None:
     issue_type = _norm_enum(issue.get("tipo") or issue.get("issue_type"), ISSUE_TYPES, "OUTRO")
     original_text = str(issue.get("trecho_original") or issue.get("original_text") or "").strip()
     suggestion = str(issue.get("sugestao") or issue.get("suggestion") or "").strip()
+    if _is_no_change_issue(suggestion):
+        return None
     if _is_blocked_hallucination(original_text, suggestion):
         return None
+    if _is_property_regime_text(original_text):
+        issue_type = "REDACAO_FRACA"
+        severity = "MEDIA"
     if issue_type == "DADO_A_CONFERIR":
         severity = "CONFERIR"
     page_number = issue.get("pagina_estimada") or issue.get("page_number")
@@ -203,4 +208,24 @@ def _is_blocked_hallucination(original_text: str, suggestion: str) -> bool:
     blocked_suggestions = {"petista"}
     return any(word in suggestion_key.split() for word in blocked_suggestions) and any(
         term in original for term in {"crime falimentar", "prevaricacao", "peita", "suborno", "concussao", "peculato"}
+    )
+
+
+def _is_property_regime_text(text: str) -> bool:
+    key = _match_key(text)
+    return bool(re.search(r"\bcasad[oa]\s+no\s+regime\s+comunhao\s+parcial\s+de\s+bens\b", key))
+
+
+def _is_no_change_issue(suggestion: str) -> bool:
+    key = _match_key(suggestion)
+    return any(
+        phrase in key
+        for phrase in {
+            "sem alteracao necessaria",
+            "nao alterar",
+            "nao ha alteracao",
+            "esta correto",
+            "mantem se",
+            "manter como esta",
+        }
     )

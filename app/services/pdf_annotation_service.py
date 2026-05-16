@@ -20,7 +20,7 @@ class PdfAnnotationService:
             for issue in issues:
                 if not issue.get("can_be_highlighted") or not issue.get("original_text"):
                     continue
-                pages = [issue.get("page_number")] if issue.get("page_number") else range(1, len(doc) + 1)
+                pages = self._candidate_pages(issue.get("page_number"), len(doc))
                 found = False
                 for page_no in pages:
                     if not page_no or page_no < 1 or page_no > len(doc):
@@ -37,10 +37,12 @@ class PdfAnnotationService:
                     point = fitz.Point(x, min(max(label_rect.y0 + 7, 14), page.rect.height - 18))
                     page.insert_text(point, issue["code"], fontsize=7.5, color=(0.55, 0, 0))
                     issue["located_in_pdf"] = True
+                    issue["page_number"] = page_no
                     found = True
                     break
                 if not found:
                     issue["located_in_pdf"] = False
+                    issue["location_strategy"] = "NOT_FOUND"
             doc.save(target)
         report_pages = self._issue_appendix(document_id, issues, document, totals)
         self._append_pdf(target, report_pages)
@@ -52,6 +54,17 @@ class PdfAnnotationService:
             if rects:
                 return rects
         return self._find_rects_by_words(page, text)
+
+    def _candidate_pages(self, preferred_page, total_pages):
+        try:
+            preferred_page = int(preferred_page) if preferred_page else None
+        except (TypeError, ValueError):
+            preferred_page = None
+        pages = []
+        if preferred_page and 1 <= preferred_page <= total_pages:
+            pages.append(preferred_page)
+        pages.extend(page for page in range(1, total_pages + 1) if page not in pages)
+        return pages
 
     def _find_rects_by_words(self, page, text: str):
         target_words = normalize_for_match(text).split()
@@ -120,13 +133,18 @@ class PdfAnnotationService:
         c.setFont("Helvetica", 9)
         for issue in issues:
             lines = [
-                f"{issue['code']} | Página: {issue.get('page_number') or '-'} | {issue['issue_type']} | {issue['severity']}",
+                f"{issue['code']} | Página: {issue.get('page_number') or '-'} | {issue['issue_type']} | {issue['severity']} | Fonte: {self._source_label(issue.get('source'))}",
                 f"Trecho: {issue.get('original_text') or '-'}",
                 f"Explicação: {issue.get('explanation') or '-'}",
                 f"Sugestão: {issue.get('suggestion') or '-'}",
                 f"Justificativa técnica: {issue.get('technical_reason') or '-'}",
                 f"Ação: {issue.get('recommended_action') or '-'}",
             ]
+            if issue.get("repeated_group_id"):
+                lines.extend([
+                    "Ocorrência repetida: sim",
+                    f"Grupo: {issue.get('repeated_group_id')} ({issue.get('repeated_count') or 0} ocorrências)",
+                ])
             for line in lines:
                 y = self._draw_line(c, y, line, height)
             y -= 8
@@ -149,4 +167,22 @@ class PdfAnnotationService:
         return y
 
     def _wrap(self, text, size):
-        return [text[i:i + size] for i in range(0, len(text), size)] or [""]
+        words = str(text or "").split()
+        if not words:
+            return [""]
+        lines = []
+        current = ""
+        for word in words:
+            candidate = f"{current} {word}".strip()
+            if len(candidate) <= size:
+                current = candidate
+                continue
+            if current:
+                lines.append(current)
+            current = word
+        if current:
+            lines.append(current)
+        return lines
+
+    def _source_label(self, source):
+        return {"BOTH": "Regra + IA", "RULE": "Regra", "AI": "IA"}.get(source or "", source or "-")

@@ -7,6 +7,36 @@ def test_detects_inicio_rule():
     assert issues[0]["suggestion"] == "DO INÍCIO"
 
 
+def test_detects_property_regime_for_masculine_and_feminine():
+    text = (
+        "LUIS, casado no regime comunhão parcial de bens. "
+        "ISABELA, casada no regime comunhão parcial de bens."
+    )
+    issues = RuleReviewService().review([{"page_number": 1, "text": text}])
+    suggestions = {issue["original_text"].lower(): issue for issue in issues}
+    masculine = suggestions["casado no regime comunhão parcial de bens"]
+    feminine = suggestions["casada no regime comunhão parcial de bens"]
+    assert masculine["suggestion"] == "casado sob o regime da comunhão parcial de bens"
+    assert feminine["suggestion"] == "casada sob o regime da comunhão parcial de bens"
+    assert masculine["issue_type"] in {"REDACAO_FRACA", "PADRONIZACAO"}
+    assert feminine["issue_type"] in {"REDACAO_FRACA", "PADRONIZACAO"}
+    assert masculine["severity"] == "MEDIA"
+    assert feminine["severity"] == "MEDIA"
+
+
+def test_mandado_judicial_is_own_rule_issue_with_punctuation_issue():
+    text = (
+        "Faculta-se ao sócio administrador, constituir procuradores em nome da sociedade, "
+        "com poderes para mandato, sendo que, no caso de mandado judicial, poderá ser por prazo indeterminado."
+    )
+    issues = RuleReviewService().review([{"page_number": 1, "text": text}])
+    originals = {issue["original_text"]: issue for issue in issues}
+    assert "Faculta-se ao sócio administrador, constituir" in originals
+    assert "mandado judicial" in originals
+    assert originals["mandado judicial"]["suggestion"] == "mandato judicial"
+    assert originals["mandado judicial"]["severity"] == "CONFERIR"
+
+
 def test_detects_masculine_qualification_with_feminine_terms():
     text = "GABRIEL VINICIUS, brasileiro, casado, empresário, portadora da cédula, inscrita no CPF, domiciliada em Osasco."
     issues = RuleReviewService().review([{"page_number": 1, "text": text}])

@@ -97,3 +97,94 @@ def test_merge_consolidates_adjacent_page_boundary_duplicates():
     merged = IssueMergeService().merge(ai_payload, [rule])
     assert len(merged) == 1
     assert merged[0]["source"] == "BOTH"
+
+
+def test_merge_keeps_mandado_judicial_as_own_issue_when_ai_uses_long_sentence():
+    rule = {
+        "page_number": 2,
+        "original_text": "mandado judicial",
+        "issue_type": "PADRONIZACAO",
+        "severity": "CONFERIR",
+        "explanation": "Pode haver troca por mandato.",
+        "technical_reason": "Contexto de procuração.",
+        "suggestion": "mandato judicial",
+        "recommended_action": "Conferir.",
+    }
+    ai_payload = {
+        "normalized_issues": [
+            {
+                "code": "E001",
+                "page_number": 2,
+                "original_text": "Faculta-se ao sócio administrador, constituir procuradores em nome da sociedade, no caso de mandado judicial, por prazo indeterminado.",
+                "issue_type": "PONTUACAO",
+                "severity": "MEDIA",
+                "explanation": "Pontuação extensa.",
+                "technical_reason": "A frase pode ser melhor pontuada.",
+                "suggestion": "Revisar pontuação.",
+                "recommended_action": "Revisar.",
+                "source": "AI",
+            }
+        ]
+    }
+    merged = IssueMergeService().merge(ai_payload, [rule])
+    originals = {item["original_text"] for item in merged}
+    assert "mandado judicial" in originals
+    assert len(merged) == 2
+
+
+def test_repetition_on_different_pages_is_marked_not_removed():
+    rule_issues = [
+        {
+            "page_number": 3,
+            "original_text": "contas-corrente",
+            "issue_type": "PADRONIZACAO",
+            "severity": "CONFERIR",
+            "explanation": "Verificar plural.",
+            "technical_reason": "Mesmo termo.",
+            "suggestion": "contas-correntes",
+            "recommended_action": "Conferir.",
+        },
+        {
+            "page_number": 7,
+            "original_text": "contas-corrente",
+            "issue_type": "PADRONIZACAO",
+            "severity": "CONFERIR",
+            "explanation": "Verificar plural.",
+            "technical_reason": "Mesmo termo.",
+            "suggestion": "contas-correntes",
+            "recommended_action": "Conferir.",
+        },
+    ]
+    merged = IssueMergeService().merge({"normalized_issues": []}, rule_issues)
+    assert len(merged) == 2
+    assert {item["repeated_group_id"] for item in merged} == {"R001"}
+    assert {item["repeated_count"] for item in merged} == {2}
+
+
+def test_merge_does_not_conflate_masculine_and_feminine_property_regime():
+    rule_issues = [
+        {
+            "page_number": 1,
+            "original_text": "casado no regime comunhão parcial de bens",
+            "issue_type": "REDACAO_FRACA",
+            "severity": "MEDIA",
+            "explanation": "Falta preposição.",
+            "technical_reason": "Regime de bens.",
+            "suggestion": "casado sob o regime da comunhão parcial de bens",
+            "recommended_action": "Corrigir.",
+        },
+        {
+            "page_number": 1,
+            "original_text": "casada no regime comunhão parcial de bens",
+            "issue_type": "REDACAO_FRACA",
+            "severity": "MEDIA",
+            "explanation": "Falta preposição.",
+            "technical_reason": "Regime de bens.",
+            "suggestion": "casada sob o regime da comunhão parcial de bens",
+            "recommended_action": "Corrigir.",
+        },
+    ]
+    merged = IssueMergeService().merge({"normalized_issues": []}, rule_issues)
+    originals = {item["original_text"] for item in merged}
+    assert "casado no regime comunhão parcial de bens" in originals
+    assert "casada no regime comunhão parcial de bens" in originals

@@ -32,5 +32,18 @@ def init_db(app) -> None:
         db = get_db()
         schema = Path(app.config["BASE_DIR"] / "app/database/schema.sql").read_text(encoding="utf-8")
         db.executescript(schema)
+        _ensure_columns(db)
         db.commit()
     app.teardown_appcontext(close_db)
+
+
+def _ensure_columns(db: sqlite3.Connection) -> None:
+    columns = {row["name"] for row in db.execute("PRAGMA table_info(review_issues)").fetchall()}
+    migrations = {
+        "location_strategy": "ALTER TABLE review_issues ADD COLUMN location_strategy TEXT",
+        "repeated_group_id": "ALTER TABLE review_issues ADD COLUMN repeated_group_id TEXT",
+        "repeated_count": "ALTER TABLE review_issues ADD COLUMN repeated_count INTEGER NOT NULL DEFAULT 0",
+    }
+    for column, sql in migrations.items():
+        if column not in columns:
+            db.execute(sql)

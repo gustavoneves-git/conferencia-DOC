@@ -1,6 +1,6 @@
 import pytest
 
-from app.ai.json_guard import extract_json, validate_review_payload
+from app.ai.json_guard import extract_json, normalize_issue, validate_review_payload
 
 
 def test_extract_json_with_text_around():
@@ -54,3 +54,30 @@ def test_blocks_absurd_petista_suggestion_in_legal_context():
         }
     )
     assert payload["normalized_issues"] == []
+
+
+def test_normalize_property_regime_is_not_accentuation():
+    issue = normalize_issue(
+        {
+            "trecho_original": "casada no regime comunhão parcial de bens",
+            "tipo": "ACENTUACAO",
+            "gravidade": "BAIXA",
+            "sugestao": "casada sob o regime da comunhão parcial de bens",
+        },
+        1,
+    )
+    assert issue["issue_type"] == "REDACAO_FRACA"
+    assert issue["severity"] == "MEDIA"
+
+
+def test_drops_no_change_ai_issue():
+    issue = normalize_issue(
+        {
+            "trecho_original": "A sócia administradora declara",
+            "tipo": "ERRO_GENERO",
+            "gravidade": "ALTA",
+            "sugestao": "Sem alteração necessária",
+        },
+        1,
+    )
+    assert issue is None

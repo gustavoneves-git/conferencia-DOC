@@ -24,8 +24,9 @@ class ReviewRepository:
             """
             INSERT INTO review_issues
             (review_session_id, code, page_number, original_text, issue_type, severity, explanation,
-             technical_reason, suggestion, recommended_action, can_be_highlighted, located_in_pdf, source, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             technical_reason, suggestion, recommended_action, can_be_highlighted, located_in_pdf,
+             location_strategy, repeated_group_id, repeated_count, source, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             [
                 (
@@ -33,7 +34,9 @@ class ReviewRepository:
                     i["issue_type"], i["severity"], i.get("explanation", ""),
                     i.get("technical_reason", ""), i.get("suggestion", ""),
                     i.get("recommended_action", ""), int(i.get("can_be_highlighted", True)),
-                    int(i.get("located_in_pdf", False)), i.get("source", "AI"), i.get("status", "OPEN"),
+                    int(i.get("located_in_pdf", False)), i.get("location_strategy"),
+                    i.get("repeated_group_id"), int(i.get("repeated_count") or 0),
+                    i.get("source", "AI"), i.get("status", "OPEN"),
                 )
                 for i in issues
             ],
