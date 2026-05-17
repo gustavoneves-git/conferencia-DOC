@@ -14,13 +14,15 @@ def detail(document_id, session_id):
     reviews = ReviewRepository()
     files = GeneratedFileRepository()
     issues = reviews.issues(session_id)
+    generated_files = files.list_for_document(document_id)
     return render_template(
         "review_detail.html",
         document=docs.get(document_id),
         session=reviews.get_session(session_id),
         issues=issues,
         metrics=_metrics(issues),
-        files=files.list_for_document(document_id),
+        files=generated_files,
+        file_status=_file_status(generated_files),
     )
 
 
@@ -32,7 +34,15 @@ def generate_corrected(document_id, session_id):
 
 @bp.get("/<int:document_id>/<int:session_id>/final-confirmation")
 def final_confirmation(document_id, session_id):
-    return render_template("final_confirmation.html", document_id=document_id, session_id=session_id)
+    docs = DocumentRepository()
+    files = GeneratedFileRepository()
+    generated_files = files.list_for_document(document_id)
+    return render_template(
+        "final_confirmation.html",
+        document=docs.get(document_id),
+        session_id=session_id,
+        file_status=_file_status(generated_files),
+    )
 
 
 def _metrics(issues):
@@ -48,4 +58,16 @@ def _metrics(issues):
         "both": both,
         "rule_total": rule + both,
         "ai_total": ai + both,
+    }
+
+
+def _file_status(files):
+    types = {file["file_type"] for file in files}
+    return {
+        "has_corrected_docx": "DOCX_CORRIGIDO" in types,
+        "has_corrected_pdf": "PDF_CORRIGIDO" in types,
+        "has_corrected": bool({"DOCX_CORRIGIDO", "PDF_CORRIGIDO"} & types),
+        "has_final_docx": "DOCX_FINAL" in types,
+        "has_final_pdf": "PDF_FINAL" in types,
+        "has_final": bool({"DOCX_FINAL", "PDF_FINAL"} & types),
     }

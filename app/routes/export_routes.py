@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from flask import Blueprint, abort, redirect, request, send_file, url_for
+from flask import Blueprint, abort, flash, redirect, request, send_file, url_for
 
 from app.repositories.generated_file_repository import GeneratedFileRepository
 from app.services.final_document_service import FinalDocumentService
@@ -19,5 +19,9 @@ def download(file_id):
 @bp.post("/final/<int:document_id>/<int:session_id>")
 def generate_final(document_id, session_id):
     confirmed = request.form.get("human_confirmed") == "on"
-    FinalDocumentService().generate(document_id, session_id, confirmed)
+    try:
+        FinalDocumentService().generate(document_id, session_id, confirmed)
+    except ValueError as exc:
+        flash(str(exc), "error")
+        return redirect(url_for("reviews.final_confirmation", document_id=document_id, session_id=session_id))
     return redirect(url_for("reviews.detail", document_id=document_id, session_id=session_id))

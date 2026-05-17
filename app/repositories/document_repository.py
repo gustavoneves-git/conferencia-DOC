@@ -28,8 +28,12 @@ class DocumentRepository:
         reviewing = db.execute(
             "SELECT COUNT(*) AS n FROM documents WHERE status IN ('UPLOADED','TEXT_EXTRACTED','REVIEWING')"
         ).fetchone()["n"]
-        corrected = db.execute("SELECT COUNT(*) AS n FROM documents WHERE status = 'CORRECTED_READY'").fetchone()["n"]
-        final = db.execute("SELECT COUNT(*) AS n FROM documents WHERE status = 'FINAL_READY'").fetchone()["n"]
+        corrected = db.execute(
+            "SELECT COUNT(*) AS n FROM documents WHERE status IN ('CORRECTED_READY','CORRIGIDO_PARA_REVISAO')"
+        ).fetchone()["n"]
+        final = db.execute(
+            "SELECT COUNT(*) AS n FROM documents WHERE status IN ('FINAL_READY','FINAL_PARA_PROTOCOLO')"
+        ).fetchone()["n"]
         return {"total": total, "reviewing": reviewing, "corrected": corrected, "final": final}
 
     def update_status(self, document_id, status):

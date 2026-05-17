@@ -8,7 +8,10 @@ def _db_path() -> Path:
     url = current_app.config["DATABASE_URL"]
     if not url.startswith("sqlite:///"):
         raise RuntimeError("Apenas DATABASE_URL sqlite:/// e suportado na V1.")
-    return current_app.config["BASE_DIR"] / url.replace("sqlite:///", "", 1)
+    raw_path = Path(url.replace("sqlite:///", "", 1))
+    if raw_path.is_absolute():
+        return raw_path
+    return current_app.config["BASE_DIR"] / raw_path
 
 
 def get_db() -> sqlite3.Connection:
@@ -30,7 +33,7 @@ def close_db(_error=None) -> None:
 def init_db(app) -> None:
     with app.app_context():
         db = get_db()
-        schema = Path(app.config["BASE_DIR"] / "app/database/schema.sql").read_text(encoding="utf-8")
+        schema = Path(__file__).with_name("schema.sql").read_text(encoding="utf-8")
         db.executescript(schema)
         _ensure_columns(db)
         db.commit()

@@ -7,9 +7,21 @@
   </div>
   <div class="actions">
     <form method="post" action="{{ url_for('reviews.generate_corrected', document_id=document.id, session_id=session.id) }}">
-      <button class="button" type="submit">Gerar DOCX/PDF corrigido</button>
+      <button class="button" type="submit">Gerar documento corrigido para revisão</button>
     </form>
-    <a class="button primary" href="{{ url_for('reviews.final_confirmation', document_id=document.id, session_id=session.id) }}">Gerar versão final</a>
+    {% if file_status.has_corrected %}
+      <a class="button primary" href="{{ url_for('reviews.final_confirmation', document_id=document.id, session_id=session.id) }}">Gerar versão final para protocolo</a>
+    {% else %}
+      <span class="button muted" title="Gere o documento corrigido antes da versão final.">Final aguarda corrigido</span>
+    {% endif %}
+  </div>
+</section>
+<section class="panel status-panel">
+  <h2>Status dos documentos</h2>
+  <div class="meta-grid">
+    <div><strong>Corrigido</strong><span>{{ 'gerado' if file_status.has_corrected else 'aguardando geração' }}</span></div>
+    <div><strong>Final</strong><span>{{ 'gerado' if file_status.has_final else 'aguardando confirmação humana' }}</span></div>
+    <div><strong>Confirmação humana</strong><span>{{ 'necessária antes do protocolo' if not file_status.has_final else 'registrada para geração final' }}</span></div>
   </div>
 </section>
 <section class="panel meta-panel">
@@ -54,6 +66,7 @@
             {% elif file.file_type == 'PDF_CORRIGIDO' %}PDF corrigido
             {% elif file.file_type == 'DOCX_FINAL' %}DOCX final
             {% elif file.file_type == 'PDF_FINAL' %}PDF final
+            {% elif file.file_type == 'JSON_CORRECOES_APLICADAS' %}Auditoria de correções
             {% else %}{{ file.file_type }}{% endif %}
           </strong>
           <span>{{ file.file_type }} · gerado em {{ file.created_at }}</span>
@@ -65,6 +78,7 @@
           {% elif file.file_type == 'PDF_CORRIGIDO' %}Baixar PDF corrigido
           {% elif file.file_type == 'DOCX_FINAL' %}Baixar versão final
           {% elif file.file_type == 'PDF_FINAL' %}Baixar versão final
+          {% elif file.file_type == 'JSON_CORRECOES_APLICADAS' %}Baixar auditoria
           {% else %}Baixar arquivo{% endif %}
         </a>
       </div>

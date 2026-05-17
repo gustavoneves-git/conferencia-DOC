@@ -2,9 +2,18 @@
 {% block content %}
 <section class="panel confirm">
   <h1>Confirmação humana obrigatória</h1>
-  <p>Confirme que a revisão humana foi realizada antes de gerar a versão final.</p>
-  <form method="post" action="{{ url_for('exports.generate_final', document_id=document_id, session_id=session_id) }}">
-    <label class="check"><input type="checkbox" name="human_confirmed" required> Revisão humana realizada e aprovada.</label>
+  <p>Confirme que a revisão humana foi realizada. A versão final será gerada sem grifos, comentários ou alertas internos.</p>
+  <div class="meta-grid">
+    <div><strong>Documento</strong><span>{{ document.original_filename }}</span></div>
+    <div><strong>Empresa</strong><span>{{ document.company_name or '-' }}</span></div>
+    <div><strong>Status</strong><span>{{ document.status }}</span></div>
+    <div><strong>Corrigido</strong><span>{{ 'gerado' if file_status.has_corrected else 'pendente' }}</span></div>
+  </div>
+  {% if not file_status.has_corrected %}
+    <p class="warning-text">Gere o documento corrigido para revisão antes de criar a versão final.</p>
+  {% endif %}
+  <form method="post" action="{{ url_for('exports.generate_final', document_id=document.id, session_id=session_id) }}">
+    <label class="check"><input type="checkbox" name="human_confirmed" required> Confirmo que a revisão humana foi realizada.</label>
     <button class="button primary" type="submit">Gerar documento final para protocolo</button>
   </form>
 </section>

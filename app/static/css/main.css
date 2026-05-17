@@ -104,6 +104,11 @@ p { color: var(--muted); margin: 0 0 14px; }
 }
 
 .button.primary:hover { background: var(--accent-dark); }
+.button.muted {
+  background: #eef1f5;
+  color: var(--muted);
+  cursor: default;
+}
 
 .actions, .file-list { display: flex; flex-wrap: wrap; gap: 10px; }
 
