@@ -46,8 +46,8 @@ class FinalDocumentService:
         title = data.get("titulo") or "Documento final para protocolo"
         text = data.get("texto_final") or corrected_text
         base = current_app.config["BASE_DIR"]
-        docx = base / "storage" / "final" / output_name(document_id, "final", "docx")
-        pdf = base / "storage" / "final" / output_name(document_id, "final", "pdf")
+        docx = base / "storage" / "final" / output_name(document_id, "final", "docx", document["original_filename"])
+        pdf = base / "storage" / "final" / output_name(document_id, "final", "pdf", document["original_filename"])
         writer = DocxOutputService()
         company = data.get("empresa") or document["company_name"]
         writer.create_docx(str(docx), title, text, company)

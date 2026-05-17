@@ -41,8 +41,8 @@ class CorrectedDocumentService:
         title = data.get("titulo") or "Documento corrigido para revisão"
         text = data.get("texto_corrigido") or fallback_text
         base = current_app.config["BASE_DIR"]
-        docx = base / "storage" / "corrected" / output_name(document_id, "corrigido", "docx")
-        pdf = base / "storage" / "corrected" / output_name(document_id, "corrigido", "pdf")
+        docx = base / "storage" / "corrected" / output_name(document_id, "corrigido", "docx", document["original_filename"])
+        pdf = base / "storage" / "corrected" / output_name(document_id, "corrigido", "pdf", document["original_filename"])
         writer = DocxOutputService()
         company = data.get("empresa") or document["company_name"]
         writer.create_docx(str(docx), title, text, company)

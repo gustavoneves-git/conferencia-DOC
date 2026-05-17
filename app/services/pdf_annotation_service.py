@@ -1,10 +1,12 @@
 from pathlib import Path
 
 import fitz
+from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
 from app.services.file_naming_service import output_name
+from app.services.pdf_visual_style import LIGHT_BORDER, MUTED, TEXT, ProfessionalPdfLayout, source_label, severity_style
 from app.services.text_match_service import candidate_phrases, normalize_for_match
 
 
@@ -15,8 +17,10 @@ class PdfAnnotationService:
     def generate(self, document_id: int, original_path: str, issues: list[dict], document=None, totals=None) -> str | None:
         if Path(original_path).suffix.lower() != ".pdf":
             return None
-        target = self.base_dir / "storage" / "annotated" / output_name(document_id, "grifado", "pdf")
+        original_name = document["original_filename"] if document else None
+        target = self.base_dir / "storage" / "annotated" / output_name(document_id, "grifado", "pdf", original_name)
         with fitz.open(original_path) as doc:
+            label_offsets: dict[int, int] = {}
             for issue in issues:
                 if not issue.get("can_be_highlighted") or not issue.get("original_text"):
                     continue
@@ -29,13 +33,15 @@ class PdfAnnotationService:
                     rects = self._find_rects(page, issue["original_text"])
                     if not rects:
                         continue
+                    highlight_color = self._highlight_color(issue.get("severity"))
                     for rect in rects[:2]:
                         annot = page.add_highlight_annot(rect)
+                        annot.set_colors(stroke=highlight_color)
+                        annot.update(opacity=0.28)
                         annot.set_info(content=f"{issue['code']} - {issue['explanation']}")
                     label_rect = rects[0]
-                    x = label_rect.x0 - 24 if label_rect.x0 > 42 else min(label_rect.x1 + 4, page.rect.width - 34)
-                    point = fitz.Point(x, min(max(label_rect.y0 + 7, 14), page.rect.height - 18))
-                    page.insert_text(point, issue["code"], fontsize=7.5, color=(0.55, 0, 0))
+                    point = self._label_point(page, page_no, label_rect, label_offsets)
+                    page.insert_text(point, issue["code"], fontsize=7.2, color=self._label_color(issue.get("severity")))
                     issue["located_in_pdf"] = True
                     issue["page_number"] = page_no
                     found = True
@@ -108,46 +114,36 @@ class PdfAnnotationService:
         return lines[:3]
 
     def _issue_appendix(self, document_id, issues, document=None, totals=None):
-        path = self.base_dir / "storage" / "tmp" / output_name(document_id, "anexo_apontamentos", "pdf")
+        original_name = document["original_filename"] if document else None
+        path = self.base_dir / "storage" / "tmp" / output_name(document_id, "anexo_apontamentos", "pdf", original_name)
         c = canvas.Canvas(str(path), pagesize=A4)
-        width, height = A4
-        y = height - 50
-        c.setFont("Helvetica-Bold", 14)
-        c.drawString(50, y, "Conferência Documento - Anexo do PDF grifado")
+        layout = ProfessionalPdfLayout(c, "Anexo do PDF grifado")
+        y = layout.new_page()
+        c.setFont("Helvetica-Bold", 16)
+        c.setFillColor(TEXT)
+        c.drawString(layout.margin_x, y, "Anexo do PDF Grifado")
         y -= 24
-        c.setFont("Helvetica", 9)
         if document:
-            y = self._draw_line(c, y, f"Documento: {document['original_filename']}", height)
-            y = self._draw_line(c, y, f"Tipo estimado: {document['document_type'] or '-'}", height)
-            y = self._draw_line(c, y, f"Empresa identificada: {document['company_name'] or '-'}", height)
+            y = self._draw_info(layout, y, "Documento", document["original_filename"])
+            y = self._draw_info(layout, y, "Tipo estimado", document["document_type"] or "-")
+            y = self._draw_info(layout, y, "Empresa identificada", document["company_name"] or "-")
         if totals:
-            y = self._draw_line(
-                c,
-                y,
-                f"Total: {totals['total']} | Baixa: {totals['BAIXA']} | Média: {totals['MEDIA']} | Alta: {totals['ALTA']} | Crítica: {totals['CRITICA']} | Conferir: {totals['CONFERIR']}",
-                height,
-            )
+            y = self._draw_info(layout, y, "Total de apontamentos", totals["total"])
+            y = layout.legend(y - 2)
+            gravity = f"Baixa {totals['BAIXA']} | Média {totals['MEDIA']} | Alta {totals['ALTA']} | Crítica {totals['CRITICA']} | Conferir {totals['CONFERIR']}"
+            y = layout.draw_wrapped(layout.margin_x, y, gravity, 110, "Helvetica-Bold", 8.5)
+        y -= 8
+        c.setFillColor(colors.HexColor("#fff8e8"))
+        c.setStrokeColor(colors.HexColor("#ead9b7"))
+        c.roundRect(layout.margin_x, y - 30, layout.width - 2 * layout.margin_x, 26, 4, fill=1, stroke=1)
+        c.setFillColor(TEXT)
         c.setFont("Helvetica-Oblique", 8)
-        y = self._draw_line(c, y - 4, "A versão final exige revisão humana. Este sistema não substitui avaliação jurídica profissional.", height)
-        y -= 14
-        c.setFont("Helvetica", 9)
+        c.drawString(layout.margin_x + 8, y - 16, "A versão final exige revisão humana. Este sistema não substitui avaliação jurídica profissional.")
+        y -= 46
+        y = layout.section_title(y, "Apontamentos")
         for issue in issues:
-            lines = [
-                f"{issue['code']} | Página: {issue.get('page_number') or '-'} | {issue['issue_type']} | {issue['severity']} | Fonte: {self._source_label(issue.get('source'))}",
-                f"Trecho: {issue.get('original_text') or '-'}",
-                f"Explicação: {issue.get('explanation') or '-'}",
-                f"Sugestão: {issue.get('suggestion') or '-'}",
-                f"Justificativa técnica: {issue.get('technical_reason') or '-'}",
-                f"Ação: {issue.get('recommended_action') or '-'}",
-            ]
-            if issue.get("repeated_group_id"):
-                lines.extend([
-                    "Ocorrência repetida: sim",
-                    f"Grupo: {issue.get('repeated_group_id')} ({issue.get('repeated_count') or 0} ocorrências)",
-                ])
-            for line in lines:
-                y = self._draw_line(c, y, line, height)
-            y -= 8
+            y = self._draw_issue_block(layout, y, issue)
+        layout.finish()
         c.save()
         return path
 
@@ -156,33 +152,53 @@ class PdfAnnotationService:
             doc.insert_pdf(extra)
             doc.saveIncr()
 
-    def _draw_line(self, c, y, text, height):
-        for chunk in self._wrap(text, 112):
-            if y < 55:
-                c.showPage()
-                c.setFont("Helvetica", 9)
-                y = height - 50
-            c.drawString(50, y, chunk)
-            y -= 13
-        return y
+    def _draw_info(self, layout, y, label, value):
+        y = layout.ensure_space(y, 18)
+        layout.text(layout.margin_x, y, f"{label}:", "Helvetica-Bold", 8, MUTED)
+        layout.text(layout.margin_x + 116, y, str(value or "-")[:105], "Helvetica", 8, TEXT)
+        return y - 15
 
-    def _wrap(self, text, size):
-        words = str(text or "").split()
-        if not words:
-            return [""]
-        lines = []
-        current = ""
-        for word in words:
-            candidate = f"{current} {word}".strip()
-            if len(candidate) <= size:
-                current = candidate
-                continue
-            if current:
-                lines.append(current)
-            current = word
-        if current:
-            lines.append(current)
-        return lines
+    def _draw_issue_block(self, layout, y, issue):
+        y = layout.ensure_space(y, 76)
+        x = layout.margin_x
+        layout.c.setFillColor(colors.white)
+        layout.c.setStrokeColor(LIGHT_BORDER)
+        layout.c.roundRect(x, y - 72, layout.width - 2 * x, 72, 4, fill=1, stroke=1)
+        layout.text(x + 8, y - 14, issue.get("code"), "Helvetica-Bold", 9)
+        layout.severity_tag(x + 45, y - 14, issue.get("severity"), width=58)
+        layout.text(
+            x + 112,
+            y - 14,
+            f"Página {issue.get('page_number') or '-'} | {issue.get('issue_type')} | Fonte: {source_label(issue.get('source'))}",
+            "Helvetica",
+            7.7,
+            MUTED,
+        )
+        yy = y - 29
+        yy = layout.draw_wrapped(x + 8, yy, f"Trecho: {issue.get('original_text') or '-'}", 102, "Helvetica", 7.8, 9.5)
+        yy = layout.draw_wrapped(x + 8, yy, f"Sugestão: {issue.get('suggestion') or '-'}", 102, "Helvetica", 7.8, 9.5)
+        if issue.get("repeated_group_id"):
+            yy = layout.draw_wrapped(x + 8, yy, f"Ocorrência repetida: sim | Grupo: {issue.get('repeated_group_id')}", 102, "Helvetica", 7.5, 9, MUTED)
+        return min(yy - 10, y - 82)
 
     def _source_label(self, source):
         return {"BOTH": "Regra + IA", "RULE": "Regra", "AI": "IA"}.get(source or "", source or "-")
+
+    def _highlight_color(self, severity):
+        style = severity_style(severity)
+        color = style["stroke"]
+        return (color.red, color.green, color.blue)
+
+    def _label_color(self, severity):
+        style = severity_style(severity)
+        color = style["text"]
+        return (color.red, color.green, color.blue)
+
+    def _label_point(self, page, page_no, label_rect, offsets):
+        margin_x = 18 if label_rect.x0 > 56 else page.rect.width - 38
+        base_y = min(max(label_rect.y0 + 8, 18), page.rect.height - 24)
+        last_y = offsets.get(page_no, -999)
+        if abs(base_y - last_y) < 11:
+            base_y = min(last_y + 11, page.rect.height - 24)
+        offsets[page_no] = base_y
+        return fitz.Point(margin_x, base_y)

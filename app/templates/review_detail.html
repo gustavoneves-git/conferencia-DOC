@@ -43,17 +43,31 @@
 </section>
 <section class="panel">
   <h2>Arquivos disponíveis</h2>
-  <div class="file-list">
+  <div class="generated-files">
     {% for file in files %}
-      <a class="button" href="{{ url_for('exports.download', file_id=file.id) }}">
-        {% if file.file_type == 'PDF_GRIFADO' %}Baixar PDF grifado
-        {% elif file.file_type == 'RELATORIO_PDF' %}Baixar relatório
-        {% elif file.file_type == 'DOCX_CORRIGIDO' %}Baixar DOCX corrigido
-        {% elif file.file_type == 'PDF_CORRIGIDO' %}Baixar PDF corrigido
-        {% elif file.file_type == 'DOCX_FINAL' %}Baixar DOCX final
-        {% elif file.file_type == 'PDF_FINAL' %}Baixar PDF final
-        {% else %}{{ file.file_type }}{% endif %}
-      </a>
+      <div class="file-card">
+        <div>
+          <strong>
+            {% if file.file_type == 'PDF_GRIFADO' %}PDF grifado
+            {% elif file.file_type == 'RELATORIO_PDF' %}Relatório técnico
+            {% elif file.file_type == 'DOCX_CORRIGIDO' %}DOCX corrigido
+            {% elif file.file_type == 'PDF_CORRIGIDO' %}PDF corrigido
+            {% elif file.file_type == 'DOCX_FINAL' %}DOCX final
+            {% elif file.file_type == 'PDF_FINAL' %}PDF final
+            {% else %}{{ file.file_type }}{% endif %}
+          </strong>
+          <span>{{ file.file_type }} · gerado em {{ file.created_at }}</span>
+        </div>
+        <a class="button" href="{{ url_for('exports.download', file_id=file.id) }}">
+          {% if file.file_type == 'PDF_GRIFADO' %}Baixar PDF grifado
+          {% elif file.file_type == 'RELATORIO_PDF' %}Baixar relatório técnico
+          {% elif file.file_type == 'DOCX_CORRIGIDO' %}Baixar DOCX corrigido
+          {% elif file.file_type == 'PDF_CORRIGIDO' %}Baixar PDF corrigido
+          {% elif file.file_type == 'DOCX_FINAL' %}Baixar versão final
+          {% elif file.file_type == 'PDF_FINAL' %}Baixar versão final
+          {% else %}Baixar arquivo{% endif %}
+        </a>
+      </div>
     {% else %}
       <p>Nenhum arquivo gerado.</p>
     {% endfor %}

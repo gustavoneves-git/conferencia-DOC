@@ -63,7 +63,9 @@ class ReviewOrchestratorService:
             reviews.save_issues(session_id, issues)
             if annotated:
                 files.create(document_id, session_id, "PDF_GRIFADO", annotated)
-            report = ReportPdfService(current_app.config["BASE_DIR"]).generate(document_id, refreshed, session_id, issues, totals)
+            report = ReportPdfService(current_app.config["BASE_DIR"]).generate(
+                document_id, refreshed, session_id, issues, totals, reviews.get_session(session_id)
+            )
             files.create(document_id, session_id, "RELATORIO_PDF", report)
             docs.update_status(document_id, "ANNOTATED_READY")
             if fallback_used:

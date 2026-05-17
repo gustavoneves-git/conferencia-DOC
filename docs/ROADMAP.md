@@ -31,3 +31,7 @@
 ## TODO OCR
 
 Preparar futura etapa de OCR para PDFs escaneados ou com texto ruim. A V2 apenas documenta essa necessidade; não implementa OCR.
+
+## TODO V3.1
+
+- Gerar relatório PDF consolidado da Base de Referência a partir do `--api-summary`.

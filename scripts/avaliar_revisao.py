@@ -163,7 +163,7 @@ def evaluate_pdf(pdf_path: Path, mode: str | None = None) -> dict:
         for file_row in generated:
             source = Path(file_row["path"])
             if source.exists():
-                target = target_dir / f"{file_row['file_type'].lower()}_{source.name}"
+                target = target_dir / source.name
                 shutil.copy2(source, target)
                 copied_files.append(str(target.relative_to(ROOT)))
         if CURRENT_BASE:

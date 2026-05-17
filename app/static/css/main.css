@@ -107,6 +107,33 @@ p { color: var(--muted); margin: 0 0 14px; }
 
 .actions, .file-list { display: flex; flex-wrap: wrap; gap: 10px; }
 
+.generated-files {
+  display: grid;
+  gap: 10px;
+}
+
+.file-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: #fafbfc;
+}
+
+.file-card strong,
+.file-card span {
+  display: block;
+}
+
+.file-card span {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .meta-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
