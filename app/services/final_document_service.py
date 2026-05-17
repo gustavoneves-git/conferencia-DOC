@@ -112,10 +112,10 @@ class FinalDocumentService:
             suggestion = (issue.get("suggestion") or "").strip()
             if not original or original not in corrected_text:
                 continue
-            if original in result:
-                continue
             if suggestion and suggestion in result:
                 result = result.replace(suggestion, original, 1)
+                continue
+            if original in result:
                 continue
             # A IA reescreveu ou removeu um ponto que dependia de validação humana.
             # Nessa situação, a versão corrigida é a fonte mais segura para o final.

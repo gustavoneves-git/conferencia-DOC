@@ -42,6 +42,8 @@ def _seed_review(app):
                         "CLÁUSULA PRIMEIRA\n"
                         "O sócio administrador, poderá representar a sociedade por mandado judicial.\n"
                         "pesa a cláusula restritiva sobre as quotas.\n"
+                        "DIASSIS assina o ato.\n"
+                        "Fica eleito o foro da sede.\n"
                     ),
                 }
             ],
@@ -49,7 +51,7 @@ def _seed_review(app):
         session_id = reviews.create_session(
             doc_id,
             "COMPLETED",
-            {"total": 3, "BAIXA": 0, "MEDIA": 1, "ALTA": 0, "CRITICA": 0, "CONFERIR": 2},
+            {"total": 5, "BAIXA": 0, "MEDIA": 1, "ALTA": 0, "CRITICA": 0, "CONFERIR": 4},
             "mock",
             "mock",
         )
@@ -92,6 +94,30 @@ def _seed_review(app):
                     "recommended_action": "Validar com responsável.",
                     "source": "RULE",
                 },
+                {
+                    "code": "E004",
+                    "page_number": 1,
+                    "original_text": "DIASSIS",
+                    "issue_type": "DADO_A_CONFERIR",
+                    "severity": "CONFERIR",
+                    "explanation": "Conferir grafia do nome.",
+                    "technical_reason": "Nome próprio suspeito exige validação humana.",
+                    "suggestion": "conferir grafia do nome",
+                    "recommended_action": "Validar documento original.",
+                    "source": "RULE",
+                },
+                {
+                    "code": "E005",
+                    "page_number": 1,
+                    "original_text": "foro da sede",
+                    "issue_type": "DADO_A_CONFERIR",
+                    "severity": "CONFERIR",
+                    "explanation": "Validar comarca aplicável.",
+                    "technical_reason": "A comarca não pode ser inferida com segurança.",
+                    "suggestion": "Fica eleito o foro da Comarca de [cidade/UF da sede]...",
+                    "recommended_action": "Validar comarca.",
+                    "source": "RULE",
+                },
             ],
         )
         return doc_id, session_id
@@ -113,7 +139,7 @@ def test_corrected_mock_applies_only_safe_corrections(tmp_path):
     assert "pesa a cláusula restritiva" in text
     assert audit_data["status_saida"] == "CORRIGIDO_PARA_REVISAO"
     assert [c["codigo"] for c in audit_data["correcoes_aplicadas"]] == ["E001"]
-    assert {a["codigo"] for a in audit_data["alertas"]} == {"E002", "E003"}
+    assert {a["codigo"] for a in audit_data["alertas"]} == {"E002", "E003", "E004", "E005"}
 
 
 def test_final_requires_human_confirmation_and_corrected_document(tmp_path):
@@ -141,13 +167,33 @@ def test_docx_output_formats_title_headings_and_signature(tmp_path):
     DocxOutputService().create_docx(
         str(path),
         "Documento corrigido para revisão",
-        "CLÁUSULA PRIMEIRA\nTexto do contrato.\n\n____________________________\nSócio",
+        (
+            "CONTRATO SOCIAL DE CONSTITUIÇÃO DE SOCIEDADE LIMITADA\n"
+            "EMPRESA TESTE LTDA\n\n"
+            "CLÁUSULA PRIMEIRA\n"
+            "Texto   do contrato.\n\n\n\n"
+            "São Paulo, 17 de maio de 2026.\n\n"
+            "____________________________\n"
+            "JOÃO DA SILVA\n"
+            "Administrador\n"
+        ),
         "EMPRESA TESTE LTDA",
     )
     doc = DocxDocument(path)
+    section = doc.sections[0]
     assert doc.paragraphs[0].alignment == 1
+    assert round(section.left_margin.cm, 1) == 3.0
+    assert round(section.right_margin.cm, 1) == 2.5
     assert any(p.text == "CLÁUSULA PRIMEIRA" and p.runs[0].bold for p in doc.paragraphs if p.runs)
-    assert any("________________" in p.text and p.alignment == 1 for p in doc.paragraphs)
+    assert any(p.text == "________________________________________" and p.alignment == 1 for p in doc.paragraphs)
+    assert any(p.text == "JOÃO DA SILVA" and p.alignment == 1 and p.runs[0].bold for p in doc.paragraphs if p.runs)
+    assert not any("  " in p.text for p in doc.paragraphs)
+    assert not any(
+        not doc.paragraphs[index].text.strip()
+        and not doc.paragraphs[index + 1].text.strip()
+        and not doc.paragraphs[index + 2].text.strip()
+        for index in range(len(doc.paragraphs) - 2)
+    )
 
 
 def test_corrected_and_final_file_names_are_professional(tmp_path):
@@ -160,3 +206,38 @@ def test_corrected_and_final_file_names_are_professional(tmp_path):
     assert "__corrigido_revisao__" in Path(corrected_pdf).name
     assert "__final_protocolo__" in Path(final_docx).name
     assert "__final_protocolo__" in Path(final_pdf).name
+
+
+def test_pdf_final_generates_with_structured_document(tmp_path):
+    path = tmp_path / "final.pdf"
+    DocxOutputService().create_pdf(
+        str(path),
+        "Documento final para protocolo",
+        (
+            "CONTRATO SOCIAL DE CONSTITUIÇÃO DE SOCIEDADE LIMITADA\n"
+            "EMPRESA TESTE LTDA\n"
+            "CLÁUSULA PRIMEIRA\n"
+            "Texto do contrato societário.\n\n"
+            "________________________________________\n"
+            "MARIA DA SILVA\n"
+            "Administradora"
+        ),
+        "EMPRESA TESTE LTDA",
+    )
+    assert path.exists()
+    assert path.stat().st_size > 1000
+
+
+def test_final_document_preserves_protected_terms(tmp_path):
+    app = _app(tmp_path)
+    doc_id, session_id = _seed_review(app)
+    with app.app_context():
+        CorrectedDocumentService().generate(doc_id, session_id)
+        docx, _pdf = FinalDocumentService().generate(doc_id, session_id, True)
+        text = "\n".join(p.text for p in DocxDocument(docx).paragraphs)
+    assert "mandado judicial" in text
+    assert "pesa a cláusula restritiva" in text
+    assert "DIASSIS" in text
+    assert "foro da sede" in text
+    assert "mandato judicial" not in text
+    assert "incidem sobre as quotas as cláusulas restritivas" not in text

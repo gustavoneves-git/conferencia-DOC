@@ -142,8 +142,10 @@ class CorrectedDocumentService:
                 continue
             original = (issue.get("original_text") or "").strip()
             suggestion = (issue.get("suggestion") or "").strip()
-            if original and original not in result and suggestion and suggestion in result:
+            if original and suggestion and suggestion in result:
                 result = result.replace(suggestion, original, 1)
+            elif original and original in result:
+                continue
             elif original and original not in result:
                 # Falha segura: se a IA reescreveu uma pendência de conferência, preserva o
                 # trecho original no fim do parágrafo para revisão humana em vez de perder o dado.
