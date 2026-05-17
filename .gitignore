@@ -10,6 +10,7 @@ storage/annotated/*
 storage/reports/*
 storage/corrected/*
 storage/final/*
+storage/generated/*
 storage/ai_raw/*
 storage/tmp/*
 !storage/uploads/.gitkeep
@@ -18,6 +19,7 @@ storage/tmp/*
 !storage/reports/.gitkeep
 !storage/corrected/.gitkeep
 !storage/final/.gitkeep
+!storage/generated/.gitkeep
 !storage/ai_raw/.gitkeep
 !storage/tmp/.gitkeep
 tests/documentos_referencia/entrada/*

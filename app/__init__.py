@@ -35,6 +35,7 @@ def create_app() -> Flask:
         "storage/reports",
         "storage/corrected",
         "storage/final",
+        "storage/generated",
         "storage/ai_raw",
         "storage/tmp",
     ]:

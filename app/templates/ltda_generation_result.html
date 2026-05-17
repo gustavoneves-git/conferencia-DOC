@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <h1>Resultado da geração</h1>
+    <p>Constituição de LTDA padrão</p>
+  </div>
+  <a class="button" href="{{ url_for('generation.ltda_constituicao_form') }}">Nova tentativa</a>
+</section>
+
+{% if result.status == 'ok' %}
+<section class="panel">
+  <h2>Minuta gerada para revisão humana</h2>
+  <p>Esta minuta foi gerada para revisão humana. Não utilizar para protocolo sem conferência.</p>
+  <div class="generated-files">
+    <div class="file-card">
+      <div><strong>DOCX da minuta</strong><span>{{ result.files.docx }}</span></div>
+      <a class="button" href="{{ url_for('generation.download_generated', path=result.files.docx) }}">Baixar DOCX</a>
+    </div>
+    <div class="file-card">
+      <div><strong>PDF da minuta</strong><span>{{ result.files.pdf }}</span></div>
+      <a class="button" href="{{ url_for('generation.download_generated', path=result.files.pdf) }}">Baixar PDF</a>
+    </div>
+    <div class="file-card">
+      <div><strong>Payload de geração</strong><span>{{ result.files.payload }}</span></div>
+      <a class="button" href="{{ url_for('generation.download_generated', path=result.files.payload) }}">Baixar JSON</a>
+    </div>
+  </div>
+</section>
+{% if result.alertas %}
+<section class="panel">
+  <h2>Alertas</h2>
+  <ul class="clean-list">
+    {% for alerta in result.alertas %}
+      <li><strong>{{ alerta.codigo }}</strong> - {{ alerta.descricao }} {{ alerta.motivo }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% elif result.status == 'advanced_blocked' %}
+<section class="panel">
+  <h2>Caso avançado bloqueado</h2>
+  <p>Este caso exige modelo avançado e revisão reforçada.</p>
+  <p>{{ result.advanced.recommended_action }}</p>
+  <ul class="clean-list">
+    {% for reason in result.advanced.advanced_reasons %}
+      <li><strong>{{ reason.label }}</strong> - {{ reason.description }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% else %}
+<section class="panel">
+  <h2>Não foi possível gerar a minuta</h2>
+  <ul class="clean-list">
+    {% for error in result.validation.errors or result.errors %}
+      <li><strong>{{ error.field }}</strong> - {{ error.message }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endblock %}

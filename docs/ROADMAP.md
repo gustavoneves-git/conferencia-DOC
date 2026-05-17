@@ -51,11 +51,19 @@ Para criação de minutas do zero, OCR não será fonte primária de dados sens�
 
 Dados como nomes, CPF, RG, CNH, endereços, datas, valores, razão social e OAB devem ser preenchidos ou confirmados manualmente. OCR pode ser apoio futuro, mas nunca fonte automática definitiva.
 
-## V5.1 Sugerida
+## V5.1
 
-- Iniciar geração real pelo tipo `CONSTITUICAO_LTDA`.
+- Iniciar geração real pelo tipo `CONSTITUICAO_LTDA_PADRAO`.
 - Criar schema estruturado de entrada.
 - Validar campos obrigatórios.
-- Gerar minuta preliminar com IA.
-- Rodar revisão automática sobre a minuta gerada.
+- Detectar caso avançado e bloquear geração padrão.
+- Gerar minuta preliminar com IA ou mock.
 - Entregar DOCX/PDF para revisão humana.
+- Salvar payload local em `storage/generated`.
+
+## TODO V5.2
+
+- Rodar revisão automática sobre a minuta gerada.
+- Integrar minuta gerada ao fluxo completo de revisão/correção/final.
+- Permitir revisão humana dos dados antes da chamada de IA.
+- Evoluir formulário para múltiplos sócios dinâmicos.

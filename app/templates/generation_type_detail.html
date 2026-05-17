@@ -82,6 +82,9 @@
     {% endfor %}
     <button class="button muted" type="button" disabled>Geração real prevista para V5.1</button>
   </form>
+  {% if document_type.code == 'CONSTITUICAO_LTDA' %}
+    <a class="button primary" href="{{ url_for('generation.ltda_constituicao_form') }}">Abrir formulário padrão de Constituição LTDA</a>
+  {% endif %}
 </section>
 <section class="notice">
   Dados sensíveis devem ser preenchidos manualmente. OCR poderá ser apoio futuro, mas não será fonte automática definitiva para nomes, documentos, endereços, valores ou qualificações.

@@ -69,6 +69,26 @@ docs/DOCUMENT_TYPE_CATALOG.md
 
 Decisão importante: para criação de minutas, dados sensíveis devem ser preenchidos manualmente. OCR pode ser apoio futuro, mas não será fonte automática definitiva para nomes, CPF, RG, CNH, endereços, valores ou qualificações.
 
+## Geração inicial de Constituição LTDA
+
+A V5.1 implementa o primeiro gerador real, limitado ao modelo `CONSTITUICAO_LTDA_PADRAO`.
+
+Escopo permitido:
+
+- sócios pessoas físicas;
+- residentes no Brasil;
+- capital em moeda corrente nacional;
+- quotas simples;
+- administrador sócio;
+- administração isolada;
+- integralização em moeda corrente nacional;
+- sede única;
+- sem cláusulas sensíveis automáticas.
+
+Casos avançados são bloqueados antes da geração padrão, incluindo sócio pessoa jurídica, sócio estrangeiro, menor/incapaz, administrador não sócio, administração conjunta, capital em bens, filial na constituição e cláusulas sensíveis.
+
+A saída é uma minuta para revisão humana em `storage/generated`, com DOCX, PDF e payload JSON local. Esses arquivos são ignorados pelo Git.
+
 ## Avaliação local da revisão
 
 Na V2, documentos reais de teste ficam apenas localmente em:

@@ -165,18 +165,24 @@ Decisão:
 
 ## Próxima Etapa Recomendada
 
-V5.1 deve começar pelo tipo:
+V5.1 começou pelo tipo:
 
 ```text
 CONSTITUICAO_LTDA
 ```
 
-Escopo sugerido:
+Escopo implementado:
 
-1. Criar schema estruturado de entrada.
-2. Validar campos obrigatórios.
-3. Montar prompt de geração específico.
-4. Gerar minuta preliminar.
-5. Rodar a própria revisão do sistema sobre a minuta gerada.
-6. Produzir DOCX/PDF para revisão humana.
+1. Schema estruturado de entrada.
+2. Validação de campos obrigatórios.
+3. Detector de caso avançado.
+4. Prompt específico de constituição de LTDA.
+5. Geração de minuta preliminar em mock/api.
+6. Produção de DOCX/PDF para revisão humana.
+7. Payload local de geração.
 
+TODO para V5.2:
+
+- rodar automaticamente o motor de revisão sobre a minuta gerada;
+- integrar minuta gerada ao fluxo de revisão existente;
+- permitir aceite humano e geração final reaproveitando o fluxo V4.1.

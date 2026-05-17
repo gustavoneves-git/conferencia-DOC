@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <h1>Constituição de LTDA</h1>
+    <p>Modelo padrão para sócios pessoas físicas, residentes no Brasil, capital em moeda corrente e administração isolada por sócio.</p>
+  </div>
+  <a class="button" href="{{ url_for('generation.form') }}">Voltar ao catálogo</a>
+</section>
+<section class="notice">
+  Preencha os dados manualmente. OCR não é fonte automática definitiva para nomes, documentos, endereços ou valores.
+</section>
+<form class="form panel" method="post" action="{{ url_for('generation.ltda_constituicao_generate') }}">
+  <fieldset>
+    <legend>Dados da empresa</legend>
+    <div class="form-grid">
+      <label>Razão social *<input name="razao_social" required></label>
+      <label>Nome fantasia<input name="nome_fantasia"></label>
+      <label>Logradouro *<input name="sede_logradouro" required></label>
+      <label>Número *<input name="sede_numero" required></label>
+      <label>Complemento<input name="sede_complemento"></label>
+      <label>Bairro *<input name="sede_bairro" required></label>
+      <label>Cidade *<input name="sede_cidade" required></label>
+      <label>UF *<input name="sede_uf" maxlength="2" required></label>
+      <label>CEP *<input name="sede_cep" required></label>
+      <label>Capital social total *<input name="capital_social" required placeholder="Ex.: 10000,00"></label>
+      <label>Quantidade total de quotas *<input name="quotas_totais" required></label>
+      <label>Valor unitário da quota *<input name="valor_unitario_quota" required placeholder="Ex.: 1,00"></label>
+      <label>Forma de integralização *
+        <select name="forma_integralizacao" required>
+          <option value="ato">Integralizado neste ato</option>
+          <option value="futura">Integralizado em prazo futuro</option>
+        </select>
+      </label>
+      <label>Prazo de integralização<input name="prazo_integralizacao" placeholder="Ex.: 12 meses"></label>
+      <label>Foro/comarca<input name="foro"></label>
+      <label>Data do instrumento *<input name="data_instrumento" required placeholder="Ex.: 17 de maio de 2026"></label>
+      <label>Cidade de assinatura *<input name="cidade_assinatura" required></label>
+      <label>UF de assinatura *<input name="uf_assinatura" maxlength="2" required></label>
+    </div>
+    <label>Objeto social *<textarea name="objeto_social" rows="4" required></textarea></label>
+  </fieldset>
+
+  {% for idx in [1, 2] %}
+  <fieldset>
+    <legend>Sócio {{ idx }}{% if idx == 1 %} *{% endif %}</legend>
+    <div class="form-grid">
+      <label>Tipo de pessoa
+        <select name="socio{{ idx }}_tipo_pessoa">
+          <option value="PF">Pessoa física</option>
+          <option value="PJ">Pessoa jurídica</option>
+        </select>
+      </label>
+      <label>Nome completo{% if idx == 1 %} *{% endif %}<input name="socio{{ idx }}_nome" {% if idx == 1 %}required{% endif %}></label>
+      <label>Nacionalidade<input name="socio{{ idx }}_nacionalidade" placeholder="brasileiro(a)"></label>
+      <label>Naturalidade<input name="socio{{ idx }}_naturalidade"></label>
+      <label>Data de nascimento<input name="socio{{ idx }}_data_nascimento"></label>
+      <label>Estado civil<input name="socio{{ idx }}_estado_civil"></label>
+      <label>Regime de bens<input name="socio{{ idx }}_regime_bens"></label>
+      <label>Profissão<input name="socio{{ idx }}_profissao"></label>
+      <label>RG<input name="socio{{ idx }}_rg"></label>
+      <label>Órgão expedidor<input name="socio{{ idx }}_orgao_expedidor"></label>
+      <label>CNH<input name="socio{{ idx }}_cnh"></label>
+      <label>CPF{% if idx == 1 %} *{% endif %}<input name="socio{{ idx }}_cpf" {% if idx == 1 %}required{% endif %}></label>
+      <label>Quotas{% if idx == 1 %} *{% endif %}<input name="socio{{ idx }}_quotas" {% if idx == 1 %}required{% endif %}></label>
+      <label>Percentual<input name="socio{{ idx }}_percentual" placeholder="Ex.: 50"></label>
+    </div>
+    <label>Endereço completo<textarea name="socio{{ idx }}_endereco" rows="2"></textarea></label>
+    <div class="check-grid">
+      <label class="check"><input type="checkbox" name="socio{{ idx }}_estrangeiro"> Sócio estrangeiro</label>
+      <label class="check"><input type="checkbox" name="socio{{ idx }}_menor_idade"> Menor de idade</label>
+      <label class="check"><input type="checkbox" name="socio{{ idx }}_incapaz"> Incapaz</label>
+    </div>
+  </fieldset>
+  {% endfor %}
+
+  <fieldset>
+    <legend>Administração</legend>
+    <div class="form-grid">
+      <label>Administrador escolhido entre os sócios *<input name="administrador_nome" required></label>
+      <label>Gênero textual
+        <select name="administrador_genero">
+          <option value="">Automático</option>
+          <option value="masculino">Masculino</option>
+          <option value="feminino">Feminino</option>
+        </select>
+      </label>
+      <label>Tipo de administração
+        <select name="tipo_administracao">
+          <option value="isolada">Isolada</option>
+          <option value="conjunta">Conjunta</option>
+        </select>
+      </label>
+      <label>Pró-labore
+        <select name="pro_labore">
+          <option value="previsto_sem_valor">Previsto sem valor</option>
+          <option value="sim">Sim</option>
+          <option value="nao">Não</option>
+        </select>
+      </label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Cláusulas sensíveis</legend>
+    <div class="check-grid">
+      <label class="check"><input type="checkbox" name="lucros_desproporcionais"> Lucros desproporcionais</label>
+      <label class="check"><input type="checkbox" name="incomunicabilidade"> Incomunicabilidade</label>
+      <label class="check"><input type="checkbox" name="impenhorabilidade"> Impenhorabilidade</label>
+      <label class="check"><input type="checkbox" name="regencia_supletiva_sa"> Regência supletiva pela Lei das S/A</label>
+      <label class="check"><input type="checkbox" name="capital_em_bens"> Capital em bens</label>
+      <label class="check"><input type="checkbox" name="filial_constituicao"> Filial na constituição</label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Assinaturas</legend>
+    <div class="form-grid">
+      <label>Advogado<input name="advogado_nome"></label>
+      <label>OAB<input name="advogado_oab"></label>
+      <label>UF OAB<input name="advogado_oab_uf" maxlength="2"></label>
+      <label>Testemunha 1<input name="testemunha1_nome"></label>
+      <label>Documento testemunha 1<input name="testemunha1_documento"></label>
+      <label>Testemunha 2<input name="testemunha2_nome"></label>
+      <label>Documento testemunha 2<input name="testemunha2_documento"></label>
+    </div>
+  </fieldset>
+
+  <button class="button primary" type="submit">Gerar minuta para revisão</button>
+</form>
+{% endblock %}

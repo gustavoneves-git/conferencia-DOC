@@ -53,6 +53,10 @@ Arquivos centrais:
 - `app/services/final_document_service.py`: gera documento final para protocolo.
 - `app/services/docx_output_service.py`: formata DOCX/PDF corrigido e final.
 - `app/document_types/catalog.py`: catálogo interno de tipos documentais para criação futura.
+- `app/services/ltda_generation_service.py`: gera minuta padrão de constituição de LTDA.
+- `app/services/ltda_generation_validation_service.py`: valida formulário estruturado de constituição de LTDA.
+- `app/services/advanced_case_detector_service.py`: bloqueia casos avançados no modelo padrão.
+- `app/generation/generation_payload_builder.py`: monta payload estruturado para geração.
 - `scripts/avaliar_revisao.py`: avaliação operacional mock/api/compare/summary.
 - `scripts/criar_manifesto_base.py`: manifesto local de base de referência.
 
@@ -186,6 +190,24 @@ Catálogo interno de tipos documentais e preparação da experiência de criaç�
 - sem chamada de IA;
 - sem persistência de formulário no banco.
 
+### V5.1
+
+Primeiro gerador real de minuta:
+
+- implementação de `CONSTITUICAO_LTDA_PADRAO`;
+- formulário guiado para constituição padrão de LTDA;
+- payload estruturado em `app/generation/`;
+- validação de campos obrigatórios, capital, quotas, percentuais e administrador;
+- detector de caso avançado para impedir uso indevido do modelo padrão;
+- prompt `generate_constituicao_ltda.md`;
+- serviço `LtdaGenerationService`;
+- geração mock de minuta para desenvolvimento local;
+- geração de DOCX/PDF para revisão em `storage/generated`;
+- gravação local do payload de geração;
+- tela de resultado com aviso de revisão humana;
+- bloqueio de geração padrão para casos avançados;
+- sem dependência de OCR como fonte primária.
+
 Último commit publicado da V4.1:
 
 ```text
@@ -235,22 +257,18 @@ Portanto:
 - IA não deve inventar dados ausentes;
 - a geração real de minuta deve partir de dados estruturados e confirmados pelo usuário.
 
-## Próximo Passo Recomendado - V5.1
+## Próximo Passo Recomendado - V5.2
 
-Implementar geração real começando por:
-
-```text
-CONSTITUICAO_LTDA
-```
+Evoluir a geração iniciada na V5.1 sem ampliar tipos documentais antes de estabilizar `CONSTITUICAO_LTDA_PADRAO`.
 
 Escopo recomendado:
 
-1. Schema estruturado de entrada.
-2. Validação de campos obrigatórios.
-3. Prompt específico de constituição de LTDA.
-4. Geração de minuta preliminar.
-5. Revisão automática da minuta gerada.
-6. DOCX/PDF para revisão humana.
+1. Revisar automaticamente a minuta gerada usando o motor de revisão existente.
+2. Integrar a minuta gerada ao fluxo de PDF grifado e relatório técnico.
+3. Permitir confirmação humana dos dados antes de chamar IA.
+4. Evoluir o formulário para múltiplos sócios dinâmicos no frontend.
+5. Criar histórico/persistência própria de gerações, se necessário.
+6. Preparar fluxo final para protocolo a partir da minuta gerada e revisada.
 
 Teste de conectividade IA:
 
