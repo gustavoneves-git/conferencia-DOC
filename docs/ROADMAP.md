@@ -35,3 +35,27 @@ Preparar futura etapa de OCR para PDFs escaneados ou com texto ruim. A V2 apenas
 ## TODO V3.1
 
 - Gerar relatório PDF consolidado da Base de Referência a partir do `--api-summary`.
+
+## V5.0
+
+- Catálogo interno de tipos documentais.
+- Tela simples com dois caminhos: revisar minuta existente ou criar nova minuta/ata.
+- Seleção de categoria amigável e tipo documental.
+- Tela de detalhes do tipo com finalidade, campos, documentos de apoio e pontos de atenção.
+- Formulário preparatório visual, sem geração real.
+- Documentação do princípio de preenchimento manual de dados sensíveis.
+
+## Decisão OCR Para Criação
+
+Para criação de minutas do zero, OCR não será fonte primária de dados sensíveis.
+
+Dados como nomes, CPF, RG, CNH, endereços, datas, valores, razão social e OAB devem ser preenchidos ou confirmados manualmente. OCR pode ser apoio futuro, mas nunca fonte automática definitiva.
+
+## V5.1 Sugerida
+
+- Iniciar geração real pelo tipo `CONSTITUICAO_LTDA`.
+- Criar schema estruturado de entrada.
+- Validar campos obrigatórios.
+- Gerar minuta preliminar com IA.
+- Rodar revisão automática sobre a minuta gerada.
+- Entregar DOCX/PDF para revisão humana.

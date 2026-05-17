@@ -50,6 +50,25 @@ python scripts/testar_ia.py
 9. DOCX/PDF corrigido para revisão.
 10. DOCX/PDF final somente após confirmação humana.
 
+## Catálogo de tipos documentais
+
+A V5.0 adiciona o Catálogo Interno de Tipos Documentais para preparar a futura criação de minutas e atas do zero.
+
+Na interface, o usuário vê dois caminhos simples:
+
+- Conferir / corrigir minuta existente.
+- Criar nova minuta ou ata.
+
+O segundo caminho ainda é preparatório: permite escolher categoria e tipo documental, visualizar campos obrigatórios, documentos de apoio e pontos de atenção. Ele não gera minuta, não chama IA e não salva dados no banco nesta etapa.
+
+Documentação completa:
+
+```text
+docs/DOCUMENT_TYPE_CATALOG.md
+```
+
+Decisão importante: para criação de minutas, dados sensíveis devem ser preenchidos manualmente. OCR pode ser apoio futuro, mas não será fonte automática definitiva para nomes, CPF, RG, CNH, endereços, valores ou qualificações.
+
 ## Avaliação local da revisão
 
 Na V2, documentos reais de teste ficam apenas localmente em:

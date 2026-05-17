@@ -5,7 +5,16 @@
     <h1>Dashboard</h1>
     <p>Revisão operacional avançada de minutas societárias.</p>
   </div>
-  <a class="button primary" href="{{ url_for('documents.upload_form') }}">Analisar documento</a>
+</section>
+<section class="choice-grid">
+  <a class="choice-card" href="{{ url_for('documents.upload_form') }}">
+    <strong>Conferir / corrigir minuta existente</strong>
+    <span>Enviar PDF ou DOCX para revisão, apontamentos, PDF grifado, relatório técnico e documentos corrigidos.</span>
+  </a>
+  <a class="choice-card" href="{{ url_for('generation.form') }}">
+    <strong>Criar nova minuta ou ata</strong>
+    <span>Escolher categoria e tipo documental para preparar os dados da futura geração de minutas.</span>
+  </a>
 </section>
 <section class="metrics">
   <div><span>{{ counts.total }}</span><small>Total</small></div>

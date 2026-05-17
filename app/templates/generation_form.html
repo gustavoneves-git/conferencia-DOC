@@ -2,15 +2,26 @@
 {% block content %}
 <section class="page-head">
   <div>
-    <h1>Gerar minuta do zero</h1>
-    <p>Estrutura inicial do Modo B para evolução da V1.</p>
+    <h1>Criar nova minuta ou ata</h1>
+    <p>Escolha uma categoria e um tipo documental. A geração automática será ativada em etapa futura.</p>
   </div>
 </section>
-<form class="form panel">
-  <label>Tipo de ato <input type="text" placeholder="Ex.: CONTRATO_SOCIAL_CONSTITUICAO_LTDA"></label>
-  <label>Empresa <input type="text"></label>
-  <label>Sócios/administradores <textarea rows="5"></textarea></label>
-  <label>Objeto e cláusulas especiais <textarea rows="6"></textarea></label>
-  <button class="button" type="button" disabled>Geração completa prevista para próxima etapa</button>
-</form>
+<section class="notice">
+  Nesta versão, o sistema apenas prepara o catálogo e o formulário inicial. Nenhuma minuta é gerada e nenhuma IA é chamada nesta tela.
+</section>
+<section class="generation-menu">
+  {% for group in creation_menu %}
+    <div class="panel type-group">
+      <h2>{{ group.user_group }}</h2>
+      <div class="type-list">
+        {% for item in group.types %}
+          <a class="type-link" href="{{ url_for('generation.type_detail', code=item.code) }}">
+            <strong>{{ item.user_label }}</strong>
+            <span>{{ item.description }}</span>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+</section>
 {% endblock %}

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block content %}
+{% if not document_type %}
+<section class="panel">
+  <h1>Tipo documental não encontrado</h1>
+  <p>O código informado não existe no catálogo interno: {{ code }}.</p>
+  <a class="button" href="{{ url_for('generation.form') }}">Voltar ao catálogo</a>
+</section>
+{% else %}
+<section class="page-head">
+  <div>
+    <h1>{{ document_type.user_label }}</h1>
+    <p>{{ document_type.user_group }} · geração ainda em preparação</p>
+  </div>
+  <a class="button" href="{{ url_for('generation.form') }}">Voltar ao catálogo</a>
+</section>
+<section class="panel">
+  <div class="meta-grid">
+    <div><strong>Código interno</strong><span>{{ document_type.code }}</span></div>
+    <div><strong>Status</strong><span>{{ 'pronto' if document_type.generation_ready else 'geração em preparação' }}</span></div>
+    <div><strong>Revisão</strong><span>{{ 'suportada' if document_type.review_ready else 'em preparação' }}</span></div>
+  </div>
+  <h2>Finalidade</h2>
+  <p>{{ document_type.purpose }}</p>
+  <h2>Descrição</h2>
+  <p>{{ document_type.description }}</p>
+</section>
+<section class="detail-grid">
+  <div class="panel">
+    <h2>Campos obrigatórios</h2>
+    <ul class="clean-list">
+      {% for field in document_type.required_fields %}
+        <li>{{ field.replace('_', ' ') }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="panel">
+    <h2>Campos opcionais</h2>
+    <ul class="clean-list">
+      {% for field in document_type.optional_fields %}
+        <li>{{ field.replace('_', ' ') }}</li>
+      {% else %}
+        <li>Nenhum campo opcional definido.</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="panel">
+    <h2>Documentos de apoio</h2>
+    <ul class="clean-list">
+      {% for item in document_type.supporting_documents %}
+        <li>{{ item.replace('_', ' ') }}</li>
+      {% else %}
+        <li>Nenhum documento de apoio definido.</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="panel">
+    <h2>Pontos de atenção</h2>
+    <ul class="clean-list">
+      {% for item in document_type.risk_points %}
+        <li>{{ item.replace('_', ' ') }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+<section class="panel">
+  <h2>Formulário preparatório</h2>
+  <p>Estrutura visual para futura geração. Os dados ainda não são salvos e nenhuma minuta é gerada nesta etapa.</p>
+  <form class="form prepared-form">
+    {% for block in document_type.form_blocks %}
+      <fieldset>
+        <legend>{{ block.title }}</legend>
+        <div class="form-grid">
+          {% for field in block.fields %}
+            <label class="{{ '' if field.available else 'field-muted' }}">
+              {{ field.label }}{% if field.required %} *{% endif %}
+              <input type="text" disabled placeholder="{{ 'Obrigatório' if field.required else 'Opcional' }}">
+            </label>
+          {% endfor %}
+        </div>
+      </fieldset>
+    {% endfor %}
+    <button class="button muted" type="button" disabled>Geração real prevista para V5.1</button>
+  </form>
+</section>
+<section class="notice">
+  Dados sensíveis devem ser preenchidos manualmente. OCR poderá ser apoio futuro, mas não será fonte automática definitiva para nomes, documentos, endereços, valores ou qualificações.
+</section>
+{% endif %}
+{% endblock %}

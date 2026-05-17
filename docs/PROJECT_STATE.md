@@ -52,6 +52,7 @@ Arquivos centrais:
 - `app/services/corrected_document_service.py`: gera documento corrigido para revisão.
 - `app/services/final_document_service.py`: gera documento final para protocolo.
 - `app/services/docx_output_service.py`: formata DOCX/PDF corrigido e final.
+- `app/document_types/catalog.py`: catálogo interno de tipos documentais para criação futura.
 - `scripts/avaliar_revisao.py`: avaliação operacional mock/api/compare/summary.
 - `scripts/criar_manifesto_base.py`: manifesto local de base de referência.
 
@@ -169,6 +170,22 @@ Acabamento visual de DOCX/PDF:
 - validação com documento de referência em `AI_MODE=api`;
 - testes automatizados ampliados.
 
+### V5.0
+
+Catálogo interno de tipos documentais e preparação da experiência de criação:
+
+- pacote `app/document_types/`;
+- catálogo de LTDA, S/A, Empresário Individual / SLU e documentos acessórios;
+- funções públicas de consulta, busca, agrupamento e menu de criação;
+- dashboard com dois caminhos simples;
+- tela de criação por categoria amigável;
+- tela de detalhe do tipo documental;
+- formulário visual preparatório;
+- documentação em `docs/DOCUMENT_TYPE_CATALOG.md`;
+- sem geração real de minuta;
+- sem chamada de IA;
+- sem persistência de formulário no banco.
+
 Último commit publicado da V4.1:
 
 ```text
@@ -203,6 +220,37 @@ Testes:
 python -m pytest -q
 python -m compileall app scripts tests
 ```
+
+## Decisão V5 Sobre OCR
+
+Para criação de minutas do zero, dados sensíveis não devem depender de OCR.
+
+Documentos de identidade, contratos antigos e comprovantes podem estar em imagem, baixa resolução ou com texto ruim. OCR pode errar nomes, CPF, RG, CNH, endereços, valores e outros dados críticos.
+
+Portanto:
+
+- campos obrigatórios devem ser preenchidos manualmente;
+- OCR pode ser apoio futuro;
+- OCR nunca será fonte automática definitiva;
+- IA não deve inventar dados ausentes;
+- a geração real de minuta deve partir de dados estruturados e confirmados pelo usuário.
+
+## Próximo Passo Recomendado - V5.1
+
+Implementar geração real começando por:
+
+```text
+CONSTITUICAO_LTDA
+```
+
+Escopo recomendado:
+
+1. Schema estruturado de entrada.
+2. Validação de campos obrigatórios.
+3. Prompt específico de constituição de LTDA.
+4. Geração de minuta preliminar.
+5. Revisão automática da minuta gerada.
+6. DOCX/PDF para revisão humana.
 
 Teste de conectividade IA:
 
@@ -451,9 +499,9 @@ Procedimento recomendado para uma nova base com aproximadamente 50 documentos:
 - Documento final depende de confirmação humana, mas a responsabilidade de revisão final continua operacional/jurídica humana.
 - Conversão PDF via reportlab é uma geração própria a partir do texto, não uma conversão fiel de DOCX para PDF.
 
-## Próximos Passos Recomendados - V5
+## Próximos Passos Recomendados - Base de Referência 02
 
-Objetivo sugerido da V5: maturação com Base de Referência 02 e refatoração incremental orientada por evidência.
+Objetivo sugerido para maturação contínua: usar a Base de Referência 02 e refatoração incremental orientada por evidência.
 
 Tarefas recomendadas:
 
